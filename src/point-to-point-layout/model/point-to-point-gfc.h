@@ -53,6 +53,42 @@ public:
   void      InstallStack (InternetStackHelper stack);
   void      AssignIpv4Address ();
 
+  /**
+   * \returns number of switch node
+   */
+  uint32_t GetSwitchCount () const;
+
+  /**
+   * \returns pointer to the i'th switch node
+   * \param i node number
+   */
+  Ptr<Node> GetSwitch (uint32_t i) const;
+
+  /**
+   * \returns number of upper node at i'th switch node
+   */
+  uint32_t GetUpCount (uint32_t i) const;
+
+  /**
+   * \returns pointer to the j'th up node of i'th switch node
+   * \param i switch number
+   * \param j node number
+   */
+  Ptr<Node> GetUp (uint32_t i, uint32_t j) const;
+
+  /**
+   * \returns number of lower node at i'th switch node
+   */
+  uint32_t GetDownCount (uint32_t i) const;
+
+  /**
+   * \returns pointer to the j'th lower node of i'th switch node
+   * \param i switch number
+   * \param j node number
+   */
+  Ptr<Node> GetDown (uint32_t i, uint32_t j) const;
+
+
 private:
   NodeContainer          m_switches;
   std::vector <NetDeviceContainer>     m_switchDevices;

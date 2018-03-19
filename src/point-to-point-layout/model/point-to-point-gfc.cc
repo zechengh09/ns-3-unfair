@@ -127,4 +127,47 @@ void PointToPointGfcHelper::AssignIpv4Address ()
     }
 }
 
+uint32_t
+PointToPointGfcHelper::GetSwitchCount () const
+{
+  return m_switches.GetN ();
+}
+
+Ptr<Node>
+PointToPointGfcHelper::GetSwitch (uint32_t i) const
+{
+  NS_ASSERT (i < m_switches.GetN ());
+  return m_switches.Get (i);
+}
+
+uint32_t
+PointToPointGfcHelper::GetUpCount (uint32_t i) const
+{
+  NS_ASSERT (i < m_switches.GetN ());
+  return m_nodes [i].first.GetN ();
+}
+
+Ptr<Node>
+PointToPointGfcHelper::GetUp (uint32_t i, uint32_t j) const
+{
+  NS_ASSERT (i < m_switches.GetN ());
+  NS_ASSERT (j < m_nodes [i].first.GetN ());
+  return m_nodes [i].first.Get (j);
+}
+
+uint32_t
+PointToPointGfcHelper::GetDownCount (uint32_t i) const
+{
+  NS_ASSERT (i < m_switches.GetN ());
+  return m_nodes [i].second.GetN ();
+}
+
+Ptr<Node>
+PointToPointGfcHelper::GetDown (uint32_t i, uint32_t j) const
+{
+  NS_ASSERT (i < m_switches.GetN ());
+  NS_ASSERT (j < m_nodes [i].second.GetN ());
+  return m_nodes [i].second.Get (j);
+}
+
 } // namespace ns3
