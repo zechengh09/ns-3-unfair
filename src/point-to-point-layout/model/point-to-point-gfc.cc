@@ -106,24 +106,26 @@ void PointToPointGfcHelper::AssignIpv4Address ()
 
   for (uint32_t i = 0; i < m_nodesDevices.size (); ++i)
     {
-      Ipv4InterfaceContainer ifc1, ifc2;
+      std::vector<Ipv4InterfaceContainer> ifc1, ifc2;
       for (uint32_t j = 0; j < m_nodesDevices [i].first.GetN (); ++j, ++j)
         {
           NetDeviceContainer ndc;
           ndc.Add (m_nodesDevices [i].first.Get (j));
           ndc.Add (m_nodesDevices [i].first.Get (j + 1));
-          ifc1 = ipAddresses.Assign (ndc);
+          ifc1.push_back(ipAddresses.Assign (ndc));
           ipAddresses.NewNetwork ();
         }
+      m_upperIpv4Interfaces.push_back (ifc1);
 
       for (uint32_t j = 0; j < m_nodesDevices [i].second.GetN (); ++j, ++j)
         {
           NetDeviceContainer ndc;
           ndc.Add (m_nodesDevices [i].second.Get (j));
           ndc.Add (m_nodesDevices [i].second.Get (j + 1));
-          ifc2 = ipAddresses.Assign (ndc);
+          ifc2.push_back(ipAddresses.Assign (ndc));
           ipAddresses.NewNetwork ();
         }
+      m_lowerIpv4Interfaces.push_back (ifc2);
     }
 }
 
@@ -168,6 +170,27 @@ PointToPointGfcHelper::GetDown (uint32_t i, uint32_t j) const
   NS_ASSERT (i < m_switches.GetN ());
   NS_ASSERT (j < m_nodes [i].second.GetN ());
   return m_nodes [i].second.Get (j);
+}
+
+Ipv4Address
+PointToPointGfcHelper::GetUpIpv4Address (uint32_t i, uint32_t j) const
+{
+  NS_ASSERT (i < m_switches.GetN ());
+  NS_ASSERT (j < m_nodes [i].first.GetN ());
+  return m_upperIpv4Interfaces [i][j].GetAddress (1, 0);
+}
+
+Ipv4Address
+PointToPointGfcHelper::GetDownIpv4Address (uint32_t i, uint32_t j) const
+{
+  return m_lowerIpv4Interfaces [i][j].GetAddress (1, 0);
+}
+
+NetDeviceContainer
+PointToPointGfcHelper::GetSwitchNetDevice (uint32_t i) const
+{
+  NS_ASSERT (i < m_switchDevices.size ());
+  return m_switchDevices [i];
 }
 
 } // namespace ns3
