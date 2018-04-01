@@ -49,13 +49,13 @@ TcpSocket::GetTypeId (void)
     .SetGroupName ("Internet")
     .AddAttribute ("SndBufSize",
                    "TcpSocket maximum transmit buffer size (bytes)",
-                   UintegerValue (131072), // 128k
+                   UintegerValue (1048576), // 1M
                    MakeUintegerAccessor (&TcpSocket::GetSndBufSize,
                                          &TcpSocket::SetSndBufSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("RcvBufSize",
                    "TcpSocket maximum receive buffer size (bytes)",
-                   UintegerValue (131072),
+                   UintegerValue (1048576),
                    MakeUintegerAccessor (&TcpSocket::GetRcvBufSize,
                                          &TcpSocket::SetRcvBufSize),
                    MakeUintegerChecker<uint32_t> ())
@@ -73,7 +73,7 @@ TcpSocket::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("InitialCwnd",
                    "TCP initial congestion window size (segments)",
-                   UintegerValue (1),
+                   UintegerValue (10),
                    MakeUintegerAccessor (&TcpSocket::GetInitialCwnd,
                                          &TcpSocket::SetInitialCwnd),
                    MakeUintegerChecker<uint32_t> ())
