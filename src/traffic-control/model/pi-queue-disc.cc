@@ -67,12 +67,12 @@ TypeId PiQueueDisc::GetTypeId (void)
                    MakeDoubleChecker<double> ())
     .AddAttribute ("A",
                    "Value of alpha",
-                   DoubleValue (0.00001822),
+                   DoubleValue (0.0001822),
                    MakeDoubleAccessor (&PiQueueDisc::m_a),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("B",
                    "Value of beta",
-                   DoubleValue (0.00001816),
+                   DoubleValue (0.0001816),
                    MakeDoubleAccessor (&PiQueueDisc::m_b),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("W",
