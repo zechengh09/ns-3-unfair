@@ -40,6 +40,223 @@ using namespace ns3;
 std::vector<std::stringstream> filePlotQueue;
 std::vector<std::stringstream> filePlotPacketSojourn;
 Ptr<UniformRandomVariable> uv = CreateObject<UniformRandomVariable> ();
+std::string dir;
+
+//Router 1
+static void
+CwndChangeR1A1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R1A1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR1B1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R1B1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR1D1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R1D1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+//Router 2
+static void
+CwndChangeR2E1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R2E1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR2E2 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R2E2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR2A1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R2A1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR2B1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R2B1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+//Router 3
+static void
+CwndChangeR3A1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R3A1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR3F1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R3F1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+//Router 4
+static void
+CwndChangeR4B1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R4B1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR4H1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R4H1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR4H2 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R4H2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+//Router 5
+static void
+CwndChangeR5C1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R5C1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR5C2 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R5C2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR5C3 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R5C3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+//Router 6
+static void
+CwndChangeR6G1 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR6G2 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR6G3 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR6G4 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G4.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR6G5 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G5.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR6G6 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G6.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+static void
+CwndChangeR6G7 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir+"cwndTraces/R6G7.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+void
+TraceCwnd ()
+{
+//Router 1
+  Config::ConnectWithoutContext ("/NodeList/7/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR1A1));
+  Config::ConnectWithoutContext ("/NodeList/8/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR1B1));
+  Config::ConnectWithoutContext ("/NodeList/9/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR1D1));
+//Router 2
+  Config::ConnectWithoutContext ("/NodeList/11/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR2E1));
+  Config::ConnectWithoutContext ("/NodeList/11/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
+                                 MakeCallback (&CwndChangeR2E2));
+  Config::ConnectWithoutContext ("/NodeList/12/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR2A1));
+  Config::ConnectWithoutContext ("/NodeList/13/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR2B1));
+//Router 3
+  Config::ConnectWithoutContext ("/NodeList/15/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR3A1));
+  Config::ConnectWithoutContext ("/NodeList/16/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR3F1));
+//Router 4
+  Config::ConnectWithoutContext ("/NodeList/18/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR4B1));
+  Config::ConnectWithoutContext ("/NodeList/19/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR4H1));
+  Config::ConnectWithoutContext ("/NodeList/19/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
+                                 MakeCallback (&CwndChangeR4H2));
+//Router 5
+  Config::ConnectWithoutContext ("/NodeList/21/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR5C1));
+  Config::ConnectWithoutContext ("/NodeList/21/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
+                                 MakeCallback (&CwndChangeR5C2));
+  Config::ConnectWithoutContext ("/NodeList/21/$ns3::TcpL4Protocol/SocketList/2/CongestionWindow",
+                                 MakeCallback (&CwndChangeR5C3));
+//Router 6
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G1));
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G2));
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/2/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G3));
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/3/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G4));
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/4/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G5));
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/5/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G6));
+  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/6/CongestionWindow",
+                                 MakeCallback (&CwndChangeR6G7));
+}
 
 void
 CheckQueueSize (Ptr<QueueDisc> queue, uint32_t i)
@@ -176,8 +393,8 @@ int main (int argc, char *argv[])
   trunkLink.push_back (pointToPointRouter);
 
   PointToPointHelper pointToPointLeaf;
-  pointToPointLeaf.SetDeviceAttribute    ("DataRate", StringValue ("150Mbps"));
-  pointToPointLeaf.SetChannelAttribute   ("Delay", StringValue ("3.33ms"));
+  pointToPointLeaf.SetDeviceAttribute    ("DataRate", StringValue ("1000Mbps"));
+  pointToPointLeaf.SetChannelAttribute   ("Delay", StringValue ("0.001ms"));
 
   PointToPointGfcHelper gfc (7, nodes, trunkLink, pointToPointLeaf);
 
@@ -255,10 +472,11 @@ int main (int argc, char *argv[])
   InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port);
   InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port + 1);
 
-  std::string dir = "results/" + currentTime + "/";
+  dir = "results/" + currentTime + "/";
   std::string dirToSave = "mkdir -p " + dir;
   system (dirToSave.c_str ());
   system ((dirToSave + "/pcap/").c_str ());
+  system ((dirToSave + "/cwndTraces/").c_str ());
 
   TrafficControlHelper tch;
   tch.SetRootQueueDisc (queue_disc_type);
@@ -278,6 +496,8 @@ int main (int argc, char *argv[])
       x = 1;
     }
   pointToPointRouter.EnablePcapAll (dir + "/pcap/N", false);
+
+  Simulator::Schedule (Seconds (3.0000001), &TraceCwnd);
 
   Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
   Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
