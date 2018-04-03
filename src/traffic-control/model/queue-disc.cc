@@ -436,6 +436,13 @@ QueueDisc::GetStats (void)
   return m_stats;
 }
 
+Time
+QueueDisc::GetPacketSojournTime () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_sojourn.Get ();
+}
+
 uint32_t
 QueueDisc::GetNPackets () const
 {

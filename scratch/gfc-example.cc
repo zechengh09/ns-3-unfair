@@ -38,6 +38,7 @@
 
 using namespace ns3;
 std::vector<std::stringstream> filePlotQueue;
+std::vector<std::stringstream> filePlotPacketSojourn;
 Ptr<UniformRandomVariable> uv = CreateObject<UniformRandomVariable> ();
 
 void
@@ -49,6 +50,19 @@ CheckQueueSize (Ptr<QueueDisc> queue, uint32_t i)
   Simulator::Schedule (Seconds (0.001), &CheckQueueSize, queue, i);
 
   std::ofstream fPlotQueue (filePlotQueue [i].str ().c_str (), std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << qSize << std::endl;
+  fPlotQueue.close ();
+}
+
+void
+CheckPacketSojourn (Ptr<QueueDisc> queue, uint32_t i)
+{
+  double qSize = queue->GetPacketSojournTime ().GetMilliSeconds ();
+
+  // check queue size every 1/100 of a second
+  Simulator::Schedule (Seconds (0.001), &CheckPacketSojourn, queue, i);
+
+  std::ofstream fPlotQueue (filePlotPacketSojourn [i].str ().c_str (), std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << qSize << std::endl;
   fPlotQueue.close ();
 }
@@ -257,7 +271,10 @@ int main (int argc, char *argv[])
       qd.Add (tch.Install (gfc.GetSwitch (i)->GetDevice (x)).Get (0));
       filePlotQueue.push_back (std::stringstream (dir + "/queue-" + std::to_string (i) + ".plotme"));
       remove (filePlotQueue [i].str ().c_str ());
+      filePlotPacketSojourn.push_back (std::stringstream (dir + "/delay-" + std::to_string (i) + ".plotme"));
+      remove (filePlotPacketSojourn [i].str ().c_str ());
       Simulator::ScheduleNow (&CheckQueueSize, qd.Get (i), i);
+      Simulator::ScheduleNow (&CheckPacketSojourn, qd.Get (i), i);
       x = 1;
     }
   pointToPointRouter.EnablePcapAll (dir + "/pcap/N", false);
