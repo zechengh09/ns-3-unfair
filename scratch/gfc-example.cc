@@ -35,6 +35,7 @@
 #include "ns3/random-variable-stream.h"
 #include "ns3/gtk-config-store.h"
 #include "ns3/flow-monitor-module.h"
+#include "ns3/callback.h"
 
 using namespace ns3;
 std::vector<std::stringstream> filePlotQueue;
@@ -42,220 +43,187 @@ std::vector<std::stringstream> filePlotPacketSojourn;
 Ptr<UniformRandomVariable> uv = CreateObject<UniformRandomVariable> ();
 std::string dir;
 
-//Router 1
 static void
-CwndChangeR1A1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeA1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R1A1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/A1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR1B1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeA2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R1B1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/A2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR1D1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeA3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R1D1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/A3.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
-//Router 2
+
 static void
-CwndChangeR2E1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeB1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R2E1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/B1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR2E2 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeB2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R2E2.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/B2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR2A1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeB3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R2A1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/B3.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR2B1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeC1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R2B1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/C1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
-//Router 3
+
 static void
-CwndChangeR3A1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeC2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R3A1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/C2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR3F1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeC3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R3F1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/C3.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
-//Router 4
+
 static void
-CwndChangeR4B1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeD1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R4B1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/D1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR4H1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeE1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R4H1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/E1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR4H2 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeE2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R4H2.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/E2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
-//Router 5
+
 static void
-CwndChangeR5C1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeF1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R5C1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/F1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR5C2 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R5C2.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR5C3 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R5C3.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
-//Router 6
+
 static void
-CwndChangeR6G1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G1.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G3.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR6G2 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG4 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G2.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G4.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR6G3 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG5 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G3.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G5.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR6G4 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG6 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G4.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G6.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR6G5 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeG7 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G5.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/G7.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR6G6 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeH1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G6.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/H1.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
+
 static void
-CwndChangeR6G7 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeH2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/R6G7.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir+"cwndTraces/H2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 void
-TraceCwnd ()
+TraceCwnd (uint32_t node, uint32_t cwndWindow,
+           Callback <void, uint32_t, uint32_t> CwndTrace)
 {
-//Router 1
-  Config::ConnectWithoutContext ("/NodeList/7/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR1A1));
-  Config::ConnectWithoutContext ("/NodeList/8/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR1B1));
-  Config::ConnectWithoutContext ("/NodeList/9/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR1D1));
-//Router 2
-  Config::ConnectWithoutContext ("/NodeList/11/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR2E1));
-  Config::ConnectWithoutContext ("/NodeList/11/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
-                                 MakeCallback (&CwndChangeR2E2));
-  Config::ConnectWithoutContext ("/NodeList/12/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR2A1));
-  Config::ConnectWithoutContext ("/NodeList/13/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR2B1));
-//Router 3
-  Config::ConnectWithoutContext ("/NodeList/15/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR3A1));
-  Config::ConnectWithoutContext ("/NodeList/16/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR3F1));
-//Router 4
-  Config::ConnectWithoutContext ("/NodeList/18/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR4B1));
-  Config::ConnectWithoutContext ("/NodeList/19/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR4H1));
-  Config::ConnectWithoutContext ("/NodeList/19/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
-                                 MakeCallback (&CwndChangeR4H2));
-//Router 5
-  Config::ConnectWithoutContext ("/NodeList/21/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR5C1));
-  Config::ConnectWithoutContext ("/NodeList/21/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
-                                 MakeCallback (&CwndChangeR5C2));
-  Config::ConnectWithoutContext ("/NodeList/21/$ns3::TcpL4Protocol/SocketList/2/CongestionWindow",
-                                 MakeCallback (&CwndChangeR5C3));
-//Router 6
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G1));
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/1/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G2));
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/2/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G3));
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/3/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G4));
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/4/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G5));
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/5/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G6));
-  Config::ConnectWithoutContext ("/NodeList/24/$ns3::TcpL4Protocol/SocketList/6/CongestionWindow",
-                                 MakeCallback (&CwndChangeR6G7));
+  Config::ConnectWithoutContext ("/NodeList/" + std::to_string (node) + "/$ns3::TcpL4Protocol/SocketList/" + std::to_string (cwndWindow) + "/CongestionWindow", CwndTrace);
 }
 
 void
@@ -284,14 +252,18 @@ CheckPacketSojourn (Ptr<QueueDisc> queue, uint32_t i)
   fPlotQueue.close ();
 }
 
-void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port)
+void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port, 
+                      uint32_t nodeId, uint32_t cwndWindow,
+                      Callback <void, uint32_t, uint32_t> CwndTrace)
 {
   BulkSendHelper source ("ns3::TcpSocketFactory", 
                          InetSocketAddress (address, port));
 
   source.SetAttribute ("MaxBytes", UintegerValue (0));
   ApplicationContainer sourceApps = source.Install (node);
-  sourceApps.Start (Seconds (uv->GetValue (0, 1)));
+  Time timeToStart = Seconds (uv->GetValue (0, 1));
+  sourceApps.Start (timeToStart);
+  Simulator::Schedule (timeToStart + Seconds (0.0001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
   sourceApps.Stop (Seconds (10.0));
 }
 
@@ -438,39 +410,42 @@ int main (int argc, char *argv[])
   InstallPacketSink (gfc.GetUp (4, 0), port + 1);  // H Sink 2 Applications
 
   // Application A
-  InstallBulkSend (gfc.GetDown (0, 0), gfc.GetUpIpv4Address (5, 0), port);
-  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (5, 0), port + 1);
-  InstallBulkSend (gfc.GetDown (2, 0), gfc.GetUpIpv4Address (5, 0), port + 2);
+  InstallBulkSend (gfc.GetDown (0, 0), gfc.GetUpIpv4Address (5, 0), port, 7, 0, MakeCallback (&CwndChangeA1));
+  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (5, 0), port + 1, 12, 0, MakeCallback (&CwndChangeA2));
+  InstallBulkSend (gfc.GetDown (2, 0), gfc.GetUpIpv4Address (5, 0), port + 2, 15, 0, MakeCallback (&CwndChangeA3));
 
   // Application B
-  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (6, 1), port);
-  InstallBulkSend (gfc.GetDown (1, 2), gfc.GetUpIpv4Address (6, 1), port + 1);
-  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (6, 1), port + 2);
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (6, 1), port, 8, 0, MakeCallback (&CwndChangeB1));
+  InstallBulkSend (gfc.GetDown (1, 2), gfc.GetUpIpv4Address (6, 1), port + 1, 13, 0, MakeCallback (&CwndChangeB2));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (6, 1), port + 2, 18, 0, MakeCallback (&CwndChangeB3));
 
   // Application C
-  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port);
-  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port + 1);
-  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port + 2);
+  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port, 21, 0, MakeCallback (&CwndChangeC1));
+  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port + 1, 21, 1, MakeCallback (&CwndChangeC2));
+  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port + 2, 21, 2, MakeCallback (&CwndChangeC3));
 
   // Application D
-  InstallBulkSend (gfc.GetDown (0, 2), gfc.GetUpIpv4Address (1, 0), port);
+  InstallBulkSend (gfc.GetDown (0, 2), gfc.GetUpIpv4Address (1, 0), port, 9, 0, MakeCallback (&CwndChangeD1));
 
   // Application E
-  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (2, 0), port);
-  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (2, 0), port + 1);
+  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (2, 0), port, 11, 0, MakeCallback (&CwndChangeE1));
+  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (2, 0), port + 1, 11, 1, MakeCallback (&CwndChangeE2));
 
   // Application F
-  InstallBulkSend (gfc.GetDown (2, 1), gfc.GetUpIpv4Address (3, 0), port);
+  InstallBulkSend (gfc.GetDown (2, 1), gfc.GetUpIpv4Address (3, 0), port, 16, 0, MakeCallback (&CwndChangeF1));
 
   // Application G
-  for (uint8_t i = 0; i < 7; i++)
-    {
-      InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + i);
-    }
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 0, 24, 0, MakeCallback (&CwndChangeG1));
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 1, 24, 1, MakeCallback (&CwndChangeG2));
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 2, 24, 2, MakeCallback (&CwndChangeG3));
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 3, 24, 3, MakeCallback (&CwndChangeG4));
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 4, 24, 4, MakeCallback (&CwndChangeG5));
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 5, 24, 5, MakeCallback (&CwndChangeG6));
+  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 6, 24, 6, MakeCallback (&CwndChangeG7));
 
   // Application H
-  InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port);
-  InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port + 1);
+  InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port, 19, 0, MakeCallback (&CwndChangeH1));
+  InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port + 1, 19, 1, MakeCallback (&CwndChangeH2));
 
   dir = "results/" + currentTime + "/";
   std::string dirToSave = "mkdir -p " + dir;
@@ -496,8 +471,6 @@ int main (int argc, char *argv[])
       x = 1;
     }
   pointToPointRouter.EnablePcapAll (dir + "/pcap/N", false);
-
-  Simulator::Schedule (Seconds (3.0000001), &TraceCwnd);
 
   Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
   Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
