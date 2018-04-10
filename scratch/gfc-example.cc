@@ -46,176 +46,176 @@ std::string dir;
 static void
 CwndChangeA1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/A1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/A1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeA2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/A2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/A2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeA3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/A3.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/A3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeB1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/B1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/B1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeB2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/B2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/B2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeB3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/B3.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/B3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeC1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/C1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/C1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeC2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/C2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/C2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeC3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/C3.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/C3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeD1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/D1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/D1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeE1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/E1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/E1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeE2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/E2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/E2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeF1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/F1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/F1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG3 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G3.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG4 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G4.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G4.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG5 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G5.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G5.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG6 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G6.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G6.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeG7 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/G7.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/G7.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeH1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/H1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/H1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
 static void
 CwndChangeH2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir+"cwndTraces/H2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
+  std::ofstream fPlotQueue (dir + "cwndTraces/H2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
 
@@ -252,11 +252,11 @@ CheckPacketSojourn (Ptr<QueueDisc> queue, uint32_t i)
   fPlotQueue.close ();
 }
 
-void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port, 
+void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port,
                       uint32_t nodeId, uint32_t cwndWindow,
                       Callback <void, uint32_t, uint32_t> CwndTrace)
 {
-  BulkSendHelper source ("ns3::TcpSocketFactory", 
+  BulkSendHelper source ("ns3::TcpSocketFactory",
                          InetSocketAddress (address, port));
 
   source.SetAttribute ("MaxBytes", UintegerValue (0));
@@ -284,9 +284,9 @@ int main (int argc, char *argv[])
   char buffer[80];
 
   time (&rawtime);
-  timeinfo = localtime(&rawtime);
+  timeinfo = localtime (&rawtime);
 
-  strftime(buffer,sizeof(buffer),"%d-%m-%Y-%I-%M-%S",timeinfo);
+  strftime (buffer,sizeof(buffer),"%d-%m-%Y-%I-%M-%S",timeinfo);
   std::string currentTime (buffer);
 
   uint32_t stream = 1;
@@ -332,7 +332,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::PiQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (250));
 
-  std::vector <std::pair <uint32_t, uint32_t>> nodes;
+  std::vector <std::pair <uint32_t, uint32_t> > nodes;
   nodes.push_back (std::make_pair (0,3));
   nodes.push_back (std::make_pair (1,3));
   nodes.push_back (std::make_pair (1,2));
@@ -499,7 +499,7 @@ int main (int argc, char *argv[])
   myfile << "stream  " << stream << "\n";
   myfile << "transport_prot " << transport_prot << "\n";
   myfile << "dataSize " << dataSize << "\n";
-  myfile.close();
+  myfile.close ();
 
   Simulator::Stop (Seconds (10));
   Simulator::Run ();
@@ -511,17 +511,17 @@ int main (int argc, char *argv[])
   FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
   for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
     {
-          Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
-          myfile << "Flow " << i->first << " (" << t.sourceAddress << ":" << t.sourcePort << " -> " << t.destinationAddress << ":" << t.destinationPort << ")\n";
-          myfile << "  Packets Dropped: " << i->second.packetsDropped.size () << "\n";
-          myfile << "  Tx Packets: " << i->second.txPackets << "\n";
-          myfile << "  Tx Bytes:   " << i->second.txBytes << "\n";
-          myfile << "  TxOffered:  " << i->second.txBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
-          myfile << "  Rx Packets: " << i->second.rxPackets << "\n";
-          myfile << "  Rx Bytes:   " << i->second.rxBytes << "\n";
-          myfile << "  Throughput: " << i->second.rxBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
+      Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
+      myfile << "Flow " << i->first << " (" << t.sourceAddress << ":" << t.sourcePort << " -> " << t.destinationAddress << ":" << t.destinationPort << ")\n";
+      myfile << "  Packets Dropped: " << i->second.packetsDropped.size () << "\n";
+      myfile << "  Tx Packets: " << i->second.txPackets << "\n";
+      myfile << "  Tx Bytes:   " << i->second.txBytes << "\n";
+      myfile << "  TxOffered:  " << i->second.txBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
+      myfile << "  Rx Packets: " << i->second.rxPackets << "\n";
+      myfile << "  Rx Bytes:   " << i->second.rxBytes << "\n";
+      myfile << "  Throughput: " << i->second.rxBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
     }
-  myfile.close();
+  myfile.close ();
 
   myfile.open (dir + "queueStats.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   for (uint32_t i = 0; i < qd.GetN (); i++)
@@ -530,7 +530,7 @@ int main (int argc, char *argv[])
       myfile << "Stat for " << i + 1 << " Queue";
       myfile << qd.Get (i)->GetStats ();
     }
-  myfile.close();
+  myfile.close ();
 
   Simulator::Destroy ();
   return 0;
