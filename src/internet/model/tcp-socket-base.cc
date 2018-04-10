@@ -3760,7 +3760,6 @@ TcpSocketBase::SetRcvBufSize (uint32_t size)
         {
           SendEmptyPacket (TcpHeader::ACK);
         }
-      // XXX SendEmptyPacket (TcpHeader::ACK);
     }
 }
 
