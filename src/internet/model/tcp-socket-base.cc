@@ -1270,16 +1270,16 @@ TcpSocketBase::DoForwardUp (Ptr<Packet> packet, const Address &fromAddress,
               //
               if (m_tcb->m_ecnState != TcpSocketState::ECN_CE_RCVD)
                 {
-                  m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
                   NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
+                  m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
                 }
             }
           if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT )
             {
               // Receiver sets ECE flags when it receives a packet with CE bit on or sender hasn’t responded to ECN echo sent by receiver
               SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
-              m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
               NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_SENT");
+              m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
             }
           else
             {
@@ -1473,8 +1473,8 @@ TcpSocketBase::ProcessEstablished (Ptr<Packet> packet, const TcpHeader& tcpHeade
           if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
             {
               SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
-              m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
               NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_SENT");
+              m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
             }
           else
             {
@@ -1725,8 +1725,8 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
         {
           NS_LOG_INFO ("Received ECN Echo is valid");
           m_ecnEchoSeq = ackNumber;
-          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_RCVD;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_RCVD");
+          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_RCVD;
         }
     }
 
@@ -2084,8 +2084,8 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
         {
           NS_LOG_INFO ("Received ECN SYN packet");
           SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK | TcpHeader::ECE);
-          m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
+          m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
         }
       else
         {
@@ -2112,8 +2112,8 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
       if (m_ecn && (tcpflags & (TcpHeader::CWR | TcpHeader::ECE)) == (TcpHeader::ECE))
         {
           NS_LOG_INFO ("Received ECN SYN-ACK packet.");
-          m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
+          m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
         }
       else
         {
@@ -2192,8 +2192,8 @@ TcpSocketBase::ProcessSynRcvd (Ptr<Packet> packet, const TcpHeader& tcpHeader,
         {
           NS_LOG_INFO ("Received ECN SYN packet");
           SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK |TcpHeader::ECE);
-          m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
+          m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
        }
       else
         {
@@ -2758,8 +2758,8 @@ TcpSocketBase::CompleteFork (Ptr<Packet> p, const TcpHeader& h,
   if (m_ecn && (h.GetFlags () & (TcpHeader::CWR | TcpHeader::ECE)) == (TcpHeader::CWR | TcpHeader::ECE))
     {
       SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK | TcpHeader::ECE);
-      m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
+      m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
     }
   else
     {
@@ -2908,8 +2908,8 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       m_cWndInfl = m_tcb->m_cWnd;
       flags |= TcpHeader::CWR;
       m_ecnCWRSeq = seq;
-      m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_CWR_SENT");
+      m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;
       NS_LOG_INFO ("CWR flags set");
       NS_LOG_DEBUG (TcpSocketState::TcpCongStateName[m_tcb->m_congState] << " -> CA_CWR");
       if (m_tcb->m_congState == TcpSocketState::CA_OPEN)
@@ -3264,8 +3264,8 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
         {
           SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
-          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_SENT");
+          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
         }
       else
         {
@@ -3300,8 +3300,8 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
         {
           SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
-          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_SENT");
+          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
         }
       else
         {
@@ -3319,8 +3319,8 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
             {
               NS_LOG_DEBUG("Congestion algo " << m_congestionControl->GetName ());
               SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
-              m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
               NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_SENT");
+              m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
             }
           else
             {
@@ -3753,8 +3753,8 @@ TcpSocketBase::SetRcvBufSize (uint32_t size)
       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
         {
           SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
-          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_SENT");
+          m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
         }
       else
         {
