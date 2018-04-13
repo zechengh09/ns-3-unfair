@@ -42,6 +42,7 @@ std::vector<std::stringstream> filePlotQueue;
 std::vector<std::stringstream> filePlotPacketSojourn;
 Ptr<UniformRandomVariable> uv = CreateObject<UniformRandomVariable> ();
 std::string dir;
+double stopTime = 10;
 
 static void
 CwndChangeA1 (uint32_t oldCwnd, uint32_t newCwnd)
@@ -264,7 +265,7 @@ void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port,
   Time timeToStart = Seconds (uv->GetValue (0, 1));
   sourceApps.Start (timeToStart);
   Simulator::Schedule (timeToStart + Seconds (0.0001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
-  sourceApps.Stop (Seconds (10.0));
+  sourceApps.Stop (Seconds (stopTime));
 }
 
 void InstallPacketSink (Ptr<Node> node, uint16_t port)
@@ -273,7 +274,7 @@ void InstallPacketSink (Ptr<Node> node, uint16_t port)
                          InetSocketAddress (Ipv4Address::GetAny (), port));
   ApplicationContainer sinkApps = sink.Install (node);
   sinkApps.Start (Seconds (0.0));
-  sinkApps.Stop (Seconds (10.0));
+  sinkApps.Stop (Seconds (stopTime));
 }
 
 
@@ -303,6 +304,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("queue_disc_type", "Queue disc type for gateway (e.g. ns3::CoDelQueueDisc)", queue_disc_type);
   cmd.AddValue ("useEcn", "Use ECN", useEcn);
   cmd.AddValue ("dataSize", "Data packet size", dataSize);
+  cmd.AddValue ("stopTime", "Stop time for applications / simulation time will be stopTime + 1", stopTime);
   cmd.Parse (argc, argv);
 
   uv->SetStream (stream);
@@ -501,7 +503,7 @@ int main (int argc, char *argv[])
   myfile << "dataSize " << dataSize << "\n";
   myfile.close ();
 
-  Simulator::Stop (Seconds (10));
+  Simulator::Stop (Seconds (stopTime + 1));
   Simulator::Run ();
 
   myfile.open (dir + "flow.txt", std::fstream::in | std::fstream::out | std::fstream::app);
