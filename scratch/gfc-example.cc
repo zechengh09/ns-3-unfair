@@ -335,10 +335,10 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (250));
   Config::SetDefault ("ns3::RedQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::RedQueueDisc::ARED", BooleanValue (true));
-  Config::SetDefault ("ns3::RedQueueDisc::Gentle", BooleanValue (false));
+  Config::SetDefault ("ns3::RedQueueDisc::Gentle", BooleanValue (true));
   Config::SetDefault ("ns3::RedQueueDisc::LinkBandwidth", DataRateValue (DataRate ("50Mbps")));
   Config::SetDefault ("ns3::RedQueueDisc::MeanPktSize", UintegerValue (1500));
-
+  Config::SetDefault ("ns3::RedQueueDisc::LinkDelay", TimeValue (MilliSeconds (13.33)));
 
   std::vector <std::pair <uint32_t, uint32_t> > nodes;
   nodes.push_back (std::make_pair (0,3));
