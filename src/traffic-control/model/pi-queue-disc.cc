@@ -199,7 +199,10 @@ PiQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
   else if (DropEarly (item, nQueued.GetValue ()))
     {
-      if (!m_useEcn || !Mark (item, UNFORCED_MARK))
+      if (m_useEcn && !item->IsMarkable ())
+        {
+        }
+      else if (!m_useEcn || !Mark (item, UNFORCED_MARK))
         {
           // Early probability drop: proactive
           DropBeforeEnqueue (item, UNFORCED_DROP);
