@@ -2,6 +2,7 @@ set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
 set output "TP.png"
 set xlabel "Time (sec)"
 set ylabel "Throughput (Mbps)"
+set xrange [0:10]
 set key outside;
 set key right top;
 plot "TP-A.plotme" title "A" with lines lw 1.5,"TP-B.plotme" title "B" with lines lw 1.5,"TP-C.plotme" title "C" with lines lw 1.5,"TP-D.plotme" title "D" with lines lw 1.5,"TP-E.plotme" title "E" with lines lw 1.5,"TP-F.plotme" title "F" with lines lw 1.5,"TP-G.plotme" title "G" with lines lw 1.5,"TP-H.plotme" title "H" with lines lw 1.5
