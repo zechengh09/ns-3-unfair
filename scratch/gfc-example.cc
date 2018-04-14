@@ -460,6 +460,7 @@ int main (int argc, char *argv[])
   system (dirToSave.c_str ());
   system ((dirToSave + "/pcap/").c_str ());
   system ((dirToSave + "/cwndTraces/").c_str ());
+  system (("cp -R PlotScripts/* " + dir + "/pcap/").c_str ());
 
   TrafficControlHelper tch;
   tch.SetRootQueueDisc (queue_disc_type);
