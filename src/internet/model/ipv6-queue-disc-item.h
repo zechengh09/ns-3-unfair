@@ -82,6 +82,7 @@ public:
    */
   virtual bool Mark (void);
 
+  virtual bool IsMarkable (void);
 private:
   /**
    * \brief Default constructor

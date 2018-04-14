@@ -215,6 +215,8 @@ public:
    */
   virtual bool Mark (void) = 0;
 
+  virtual bool IsMarkable (void) = 0;
+
 private:
   /**
    * \brief Default constructor
