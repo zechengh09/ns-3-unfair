@@ -295,6 +295,8 @@ int main (int argc, char *argv[])
   std::string queue_disc_type = "FifoQueueDisc";
   bool useEcn = false;
   uint32_t dataSize = 1446;
+  uint32_t delAckCount = 1;
+
   CommandLine cmd;
   cmd.AddValue ("stream", "Seed value for random variable", stream);
   cmd.AddValue ("transport_prot", "Transport protocol to use: TcpNewReno, "
@@ -329,10 +331,12 @@ int main (int argc, char *argv[])
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (transport_prot)));
     }
 
+  Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (delAckCount));
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (dataSize));
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (250));
+  Config::SetDefault ("ns3::PiQueueDisc::MeanPktSize", UintegerValue (1500));
   Config::SetDefault ("ns3::RedQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::RedQueueDisc::ARED", BooleanValue (true));
   Config::SetDefault ("ns3::RedQueueDisc::Gentle", BooleanValue (true));
@@ -508,6 +512,7 @@ int main (int argc, char *argv[])
   myfile << "stream  " << stream << "\n";
   myfile << "transport_prot " << transport_prot << "\n";
   myfile << "dataSize " << dataSize << "\n";
+  myfile << "delAckCount " << delAckCount << "\n";
   myfile.close ();
 
   Simulator::Stop (Seconds (stopTime + 1));
