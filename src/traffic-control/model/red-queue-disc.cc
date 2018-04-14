@@ -445,8 +445,14 @@ RedQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
         }
       else if (DropEarly (item, nQueued))
         {
-          NS_LOG_LOGIC ("DropEarly returns 1");
-          dropType = DTYPE_UNFORCED;
+          if (m_useEcn && !item->IsMarkable ())
+            {
+            }
+          else
+            {
+              NS_LOG_LOGIC ("DropEarly returns 1");
+              dropType = DTYPE_UNFORCED;
+            }
         }
     }
   else 
