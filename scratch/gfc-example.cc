@@ -264,7 +264,7 @@ void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port,
   ApplicationContainer sourceApps = source.Install (node);
   Time timeToStart = Seconds (uv->GetValue (0, 1));
   sourceApps.Start (timeToStart);
-  Simulator::Schedule (timeToStart + Seconds (0.0001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
+  Simulator::Schedule (timeToStart + Seconds (0.001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
   sourceApps.Stop (Seconds (stopTime));
 }
 
