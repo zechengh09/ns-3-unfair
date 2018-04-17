@@ -399,6 +399,7 @@ def build(bld):
         'model/rip.h',
         'model/rip-header.h',
         'helper/rip-helper.h',
+        'model/windowed-filter.h',
        ]
 
     if bld.env['NSC_ENABLED']:
