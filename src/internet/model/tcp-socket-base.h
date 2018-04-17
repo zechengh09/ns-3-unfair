@@ -201,7 +201,7 @@ public:
   Time                   m_firstSentTime   {Seconds (0)};    //!< The send time of the packet that was most recently marked as delivered
   uint32_t               m_appLimited      {0};              //!< The index of the last transmitted packet marked as application-limited
   uint32_t               m_txItemDelivered {0};
-
+  uint32_t               m_lastAckedSackedBytes {0};         //!< Size of data sacked in the last ack
   /**
    * \brief Get cwnd in segments rather than bytes
    *

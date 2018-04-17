@@ -1652,7 +1652,7 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
 
   m_txBuffer->GenerateRateSample ();
   rs->m_packetLoss = std::abs ((int) lostOut - (int) m_txBuffer->GetLost ());
-  rs->m_lastAckedSackedBytes = m_tcb->m_delivered - delivered;
+  m_tcb->m_lastAckedSackedBytes = m_tcb->m_delivered - delivered;
 
   // RFC 6675 Section 5: 2nd, 3rd paragraph and point (A), (B) implementation
   // are inside the function ProcessAck
