@@ -264,16 +264,17 @@ void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port,
   ApplicationContainer sourceApps = source.Install (node);
   Time timeToStart = Seconds (uv->GetValue (0, 1));
   sourceApps.Start (timeToStart);
-  if ((nodeId == 19 && cwndWindow == 1) &&
-      (nodeId == 21 && cwndWindow == 2) &&
-      (nodeId == 24 && cwndWindow == 3)) //HACK: might not work with different seed
-    {
-      Simulator::Schedule (timeToStart + Seconds (0.3), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
-    }
-  else
-    {
-      Simulator::Schedule (timeToStart + Seconds (0.001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
-    }
+//  if ((nodeId == 19 && cwndWindow == 1) &&
+//      (nodeId == 21 && cwndWindow == 2) &&
+//      (nodeId == 24 && cwndWindow == 3)) //HACK: might not work with different seed
+//    {
+//      Simulator::Schedule (timeToStart + Seconds (0.3), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
+//    }
+//  else
+//    {
+//      Simulator::Schedule (timeToStart + Seconds (0.001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
+//    }
+  Simulator::Schedule (Seconds (2.0), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
   sourceApps.Stop (Seconds (stopTime));
 }
 
