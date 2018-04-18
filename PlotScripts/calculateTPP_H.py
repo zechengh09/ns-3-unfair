@@ -6,15 +6,15 @@ import os
 for file_name in sys.argv[1:]:
     os.system("tshark -r " + file_name +" -T fields -e frame.time_relative -e frame.len -e ip.dst  >" + file_name[0:file_name.rindex('.')] + ".csv")
     f = open( 'plotmeTPP/TP-H.plotme', 'w')
-    old_time = 0
+    old_time = 2.0
     new_time =0
     val = 0
     totalval = 0
-    p = 0.0
+    p = 2.0
     with open(file_name[0:file_name.rindex('.')] + '.csv') as fq:
         fp = fq.readlines()
         for line in fp:
-            if str(line.split('\t')[2]) == "10.0.19.2\n" and float(line.split('\t')[1]) == 1500:
+            if str(line.split('\t')[2]) == "10.0.19.2\n" and float(line.split('\t')[1]) == 1500 and float(line.split('\t')[0]) > 2.0:
                 new_time = float(line.split('\t')[0])
                 val += 1
                 totalval +=1
