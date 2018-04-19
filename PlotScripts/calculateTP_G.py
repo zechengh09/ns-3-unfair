@@ -24,6 +24,6 @@ for file_name in sys.argv[1:]:
                     p += (new_time - old_time)
                     old_time = new_time
                     val = 0
-        print 'G ' + str(totalval * 8.0/(1000.0 * 1000.0)/new_time)
+        print 'G ' + str(totalval * 8.0/(1000.0 * 1000.0)/(new_time - 2.0))
     f.close()
     os.remove(file_name[0:file_name.rindex('.')] + '.csv')
