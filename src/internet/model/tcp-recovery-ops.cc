@@ -85,30 +85,20 @@ ClassicRecovery::~ClassicRecovery (void)
 }
 
 void
-ClassicRecovery::EnterRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled, uint32_t dupAckCount)
+ClassicRecovery::EnterRecovery (Ptr<TcpSocketState> tcb, uint32_t dupAckCount)
 {
   tcb->m_cWnd = tcb->m_ssThresh;
-  if (!isSackEnabled)
-    {
-      tcb->m_cWndInfl = tcb->m_ssThresh + dupAckCount * tcb->m_segmentSize;
-    }
-  else
-    {
-      tcb->m_cWndInfl = tcb->m_cWnd;
-    }
+  tcb->m_cWndInfl = tcb->m_ssThresh + (dupAckCount * tcb->m_segmentSize);
 }
 
 void
-ClassicRecovery::DoRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled)
+ClassicRecovery::DoRecovery (Ptr<TcpSocketState> tcb)
 {
-  if (!isSackEnabled)
-    {
-      tcb->m_cWndInfl += tcb->m_segmentSize;
-    }
+  tcb->m_cWndInfl += tcb->m_segmentSize;
 }
 
 void
-ClassicRecovery::ExitRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled)
+ClassicRecovery::ExitRecovery (Ptr<TcpSocketState> tcb)
 {
   // Follow NewReno procedures to exit FR if SACK is disabled
   // (RFC2582 sec.3 bullet #5 paragraph 2, option 2)

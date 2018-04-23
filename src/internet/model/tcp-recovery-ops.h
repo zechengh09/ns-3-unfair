@@ -85,13 +85,11 @@ public:
    * The function is called when the TcpSocketState is changed to CA_RECOVERY.
    *
    * \param tcb internal congestion state
-   * \param isSackEnabled
    * \param dupAckCount duplicate acknowldgement count
    */
-  virtual void EnterRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled, uint32_t dupAckCount)
+  virtual void EnterRecovery (Ptr<TcpSocketState> tcb, uint32_t dupAckCount)
   {
     NS_UNUSED (tcb);
-    NS_UNUSED (isSackEnabled);
     NS_UNUSED (dupAckCount);
   }
 
@@ -103,12 +101,10 @@ public:
    * as per the recovery algorithm.
    *
    * \param tcb internal congestion state
-   * \param isSackEnabled
    */
-  virtual void DoRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled)
+  virtual void DoRecovery (Ptr<TcpSocketState> tcb)
   {
     NS_UNUSED (tcb);
-    NS_UNUSED (isSackEnabled);
   }
 
   /**
@@ -119,10 +115,9 @@ public:
    * \param tcb internal congestion state
    * \param isSackEnabled
    */
-  virtual void ExitRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled)
+  virtual void ExitRecovery (Ptr<TcpSocketState> tcb)
   {
     NS_UNUSED (tcb);
-    NS_UNUSED (isSackEnabled);
   }
 
   /**
@@ -138,6 +133,12 @@ public:
  *
  * Classic recovery refers to the two well-established recovery algorithms,
  * namely, NewReno (RFC 6582) and SACK based recovery (RFC 6675).
+ *
+ * The idea of the algorithm is that when we enter recovery, we set the
+ * congestion window value to the slow start threshold and maintain it
+ * at such value until we are fully recovered (in other words, until
+ * the highest sequence transmitted at time of detecting the loss is
+ * ACKed by the receiver).
  *
  * \see DoRecovery
  */
@@ -168,11 +169,11 @@ public:
 
   virtual std::string GetName () const override;
 
-  virtual void EnterRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled, uint32_t dupAckCount) override;
+  virtual void EnterRecovery (Ptr<TcpSocketState> tcb, uint32_t dupAckCount) override;
 
-  virtual void DoRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled) override;
+  virtual void DoRecovery (Ptr<TcpSocketState> tcb) override;
 
-  virtual void ExitRecovery (Ptr<TcpSocketState> tcb, bool isSackEnabled) override;
+  virtual void ExitRecovery (Ptr<TcpSocketState> tcb) override;
 
   virtual Ptr<TcpRecoveryOps> Fork () override;
 };
