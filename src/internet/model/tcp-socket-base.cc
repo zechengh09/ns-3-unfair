@@ -283,7 +283,12 @@ TcpSocketState::TcpSocketState (const TcpSocketState &other)
     m_currentPacingRate (other.m_currentPacingRate),
     m_minRtt (other.m_minRtt),
     m_bytesInFlight (other.m_bytesInFlight),
-    m_lastRtt (other.m_lastRtt)
+    m_lastRtt (other.m_lastRtt),
+    m_delivered (other.m_delivered),
+    m_deliveredTime (other.m_deliveredTime),
+    m_firstSentTime (other.m_firstSentTime),
+    m_appLimited (other.m_appLimited),
+    m_txItemDelivered (other.m_txItemDelivered)
 {
 }
 
@@ -305,6 +310,14 @@ TcpSocketBase::TcpSocketBase (void)
   m_pacingTimer.SetFunction (&TcpSocketBase::NotifyPacingPerformed, this);
 
   bool ok;
+
+  ok = m_txBuffer->TraceConnectWithoutContext ("ItemSackedAcked",
+                                          MakeCallback (&TcpSocketBase::UpdateRateSample, this));
+  NS_ASSERT (ok == true);
+
+  ok = m_txBuffer->TraceConnectWithoutContext ("ItemToSend",
+                                          MakeCallback (&TcpSocketBase::UpdatePacketSent, this));
+  NS_ASSERT (ok == true);
 
   ok = m_tcb->TraceConnectWithoutContext ("CongestionWindow",
                                           MakeCallback (&TcpSocketBase::UpdateCwnd, this));
@@ -420,6 +433,14 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
     }
 
   bool ok;
+
+  ok = m_txBuffer->TraceConnectWithoutContext ("ItemSackedAcked",
+                                          MakeCallback (&TcpSocketBase::UpdateRateSample, this));
+  NS_ASSERT (ok == true);
+
+  ok = m_txBuffer->TraceConnectWithoutContext ("ItemToSend",
+                                          MakeCallback (&TcpSocketBase::UpdatePacketSent, this));
+  NS_ASSERT (ok == true);
 
   ok = m_tcb->TraceConnectWithoutContext ("CongestionWindow",
                                           MakeCallback (&TcpSocketBase::UpdateCwnd, this));
@@ -841,6 +862,11 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
           m_errno = ERROR_MSGSIZE;
           return -1;
         }
+      else
+        {
+          OnApplicationWrite ();
+        }
+
       if (m_shutdownSend)
         {
           m_errno = ERROR_SHUTDOWN;
@@ -1639,6 +1665,11 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
   NS_ASSERT (0 != (tcpHeader.GetFlags () & TcpHeader::ACK));
   NS_ASSERT (m_tcb->m_segmentSize > 0);
 
+  m_rs.m_priorInFlight = m_tcb->m_bytesInFlight.Get ();
+
+  uint32_t lostOut = m_txBuffer->GetLost ();
+  uint32_t delivered = m_tcb->m_delivered;
+
   // RFC 6675, Section 5, 1st paragraph:
   // Upon the receipt of any ACK containing SACK information, the
   // scoreboard MUST be updated via the Update () routine (done in ReadOptions)
@@ -1649,9 +1680,16 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
   SequenceNumber32 oldHeadSequence = m_txBuffer->HeadSequence ();
   m_txBuffer->DiscardUpTo (ackNumber);
 
+  NS_LOG_INFO ("BytesInFlight :: " << BytesInFlight ());
+
+  m_rs.m_packetLoss = std::abs ((int) lostOut - (int) m_txBuffer->GetLost ());
+  m_rs.m_lastAckedSackedBytes = m_tcb->m_delivered - delivered;
+
   // RFC 6675 Section 5: 2nd, 3rd paragraph and point (A), (B) implementation
   // are inside the function ProcessAck
   ProcessAck (ackNumber, scoreboardUpdated, oldHeadSequence);
+
+  GenerateRateSample ();
 
   // If there is any data piggybacked, store it into m_rxBuffer
   if (packet->GetSize () > 0)
@@ -3852,6 +3890,99 @@ void TcpSocketBase::UpdateWindowSize (const TcpHeader &header)
     {
       m_rWnd = receivedWindow;
       NS_LOG_LOGIC ("updating rWnd to " << m_rWnd);
+    }
+}
+
+void
+TcpSocketBase::UpdatePacketSent (TcpTxItem *item)
+{
+  NS_LOG_FUNCTION (this << item);
+
+  if (item == nullptr)
+    {
+      return;
+    }
+
+  if (m_tcb->m_bytesInFlight.Get () == 0)
+    {
+      m_tcb->m_firstSentTime = Simulator::Now ();
+      m_tcb->m_deliveredTime = Simulator::Now ();
+    }
+
+  item->m_firstSentTime = m_tcb->m_firstSentTime;
+  item->m_deliveredTime = m_tcb->m_deliveredTime;
+  item->m_isAppLimited  = (m_tcb->m_appLimited != SequenceNumber32 (0));
+  item->m_delivered     = m_tcb->m_delivered;
+}
+
+void
+TcpSocketBase::UpdateRateSample (TcpTxItem *item)
+{
+  NS_LOG_FUNCTION (this << item);
+
+  if (item == nullptr || item->m_deliveredTime == Time::Max ())
+    {
+      return;
+    }
+
+  m_tcb->m_delivered         += item->m_packet->GetSize ();;
+  m_tcb->m_deliveredTime      = Simulator::Now ();
+
+  if (item->m_delivered > m_rs.m_priorDelivered)
+    {
+      m_rs.m_priorDelivered   = item->m_delivered;
+      m_rs.m_priorTime        = item->m_deliveredTime;
+      m_rs.m_isAppLimited     = item->m_isAppLimited;
+      m_rs.m_sendElapsed      = item->m_lastSent - item->m_firstSentTime;
+      m_rs.m_ackElapsed       = m_tcb->m_deliveredTime - item->m_deliveredTime;
+      m_tcb->m_firstSentTime  = item->m_lastSent;
+    }
+
+  item->m_deliveredTime = Time::Max ();
+  m_tcb->m_txItemDelivered = item->m_delivered;
+}
+
+bool
+TcpSocketBase::GenerateRateSample ()
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_tcb->m_appLimited != SequenceNumber32 (0) && m_tcb->m_delivered > m_tcb->m_appLimited.GetValue ())
+    {
+      m_tcb->m_appLimited = SequenceNumber32 (0);
+    }
+
+  if (m_rs.m_priorTime == Seconds (0))
+    {
+      return false;
+    }
+
+  m_rs.m_interval = std::max (m_rs.m_sendElapsed, m_rs.m_ackElapsed);
+
+  m_rs.m_delivered = m_tcb->m_delivered - m_rs.m_priorDelivered;
+
+  if (m_rs.m_interval < m_tcb->m_minRtt)
+    {
+      m_rs.m_interval = Seconds (0);
+      return false;
+    }
+
+  if (m_rs.m_interval != Seconds (0))
+    {
+      m_rs.m_deliveryRate = DataRate (m_rs.m_delivered * 8.0 / m_rs.m_interval.GetSeconds ());
+    }
+  return true;
+}
+
+void
+TcpSocketBase::OnApplicationWrite ()
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_txBuffer->TailSequence () - m_tcb->m_nextTxSequence < (int) m_tcb->m_segmentSize &&
+      m_tcb->m_bytesInFlight.Get () < m_tcb->m_cWnd)
+    {
+      m_tcb->m_appLimited = m_tcb->m_delivered + m_tcb->m_bytesInFlight.Get () ? : 1U;
     }
 }
 

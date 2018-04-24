@@ -49,6 +49,7 @@ class TcpRecoveryOps;
 class RttEstimator;
 class TcpRxBuffer;
 class TcpTxBuffer;
+class TcpTxItem;
 class TcpOption;
 class Ipv4Interface;
 class Ipv6Interface;
@@ -78,6 +79,21 @@ public:
   uint32_t        count;  //!< Number of bytes sent
   Time            time;   //!< Time this one was sent
   bool            retx;   //!< True if this has been retransmitted
+};
+
+struct RateSample
+{
+  DataRate      m_deliveryRate;   //!< The delivery rate sample
+  uint32_t      m_isAppLimited;   //!< Indicates whether the rate sample is application-limited
+  Time          m_interval;       //!< The length of the sampling interval
+  uint32_t      m_delivered;      //!< The amount of data marked as delivered over the sampling interval
+  uint32_t      m_priorDelivered; //!< The delivered count of the most recent packet delivered
+  Time          m_priorTime;      //!< The delivered time of the most recent packet delivered
+  Time          m_sendElapsed;    //!< Send time interval calculated from the most recent packet delivered
+  Time          m_ackElapsed;     //!< ACK time interval calculated from the most recent packet delivered
+  uint32_t      m_lastAckedSackedBytes;   //!< Size of data (s)acked in the last ack
+  uint32_t      m_packetLoss;     //!< packets marked as lost in the last ack
+  uint32_t      m_priorInFlight;  //!< Bytes InFlight value prior to this ack
 };
 
 /**
@@ -197,6 +213,12 @@ public:
 
   TracedValue<uint32_t>  m_bytesInFlight {0};        //!< Bytes in flight
   TracedValue<Time>      m_lastRtt {Seconds (0.0)};  //!< Last RTT sample collected
+
+  uint64_t               m_delivered       {0};              //!< The total amount of data in bytes delivered so far
+  Time                   m_deliveredTime   {Seconds (0)};    //!< Simulator time when m_delivered was last updated
+  Time                   m_firstSentTime   {Seconds (0)};    //!< The send time of the packet that was most recently marked as delivered
+  SequenceNumber32       m_appLimited      {0};              //!< The Sequence Number of the last transmitted packet marked as application-limited
+  uint32_t               m_txItemDelivered {0};              //!< m_delivered at the time the acked packet was sent
 
   /**
    * \brief Get cwnd in segments rather than bytes
@@ -1189,6 +1211,26 @@ protected:
    */
   void AddSocketTags (const Ptr<Packet> &p) const;
 
+  /**
+   * \brief Updates per packet variables required for rate sampling on each
+   * packet transmission
+   */
+  void UpdatePacketSent (TcpTxItem *item);
+
+  /**
+   * \brief Updates rate samples rate on arrival of each acknowledgement.
+   */
+  void UpdateRateSample (TcpTxItem *item);
+
+  /**
+   * \brief Calculates delivery rate on arrival of each acknowledgement.
+   */
+  bool GenerateRateSample ();
+
+  /**
+   * \brief Checks if connection is app-limited upon each write from the application
+   */
+  void OnApplicationWrite ();
 protected:
   // Counters and events
   EventId           m_retxEvent     {}; //!< Retransmission event
@@ -1287,6 +1329,8 @@ protected:
 
   // Pacing related variable
   Timer m_pacingTimer {Timer::REMOVE_ON_DESTROY}; //!< Pacing Event
+
+  RateSample m_rs;    //!< rate sample data
 };
 
 /**
