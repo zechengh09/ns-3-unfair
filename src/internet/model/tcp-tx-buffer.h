@@ -61,6 +61,10 @@ public:
   bool m_retrans       {false};      //!< Indicates if the segment is retransmitted
   Time m_lastSent      {Time::Min()};//!< Timestamp of the time at which the segment has been sent last time
   bool m_sacked        {false};      //!< Indicates if the segment has been SACKed
+  uint64_t m_delivered {0};          //!< Connection's delivered data at the time the packet was sent
+  Time m_deliveredTime {Seconds (0)};//!< Connection's delivered time at the time the packet was sent
+  Time m_firstSentTime {Seconds (0)};//!< Connection's first sent time at the time the packet was sent
+  bool m_isAppLimited  {false};      //!< Connection's app limited at the time the packet was sent
 };
 
 /**
@@ -406,6 +410,12 @@ public:
    */
   void ResetRenoSack ();
 
+  /**
+   * TracedCallback signature for copied and (s)acked events.
+   *
+   * \param [in] item Pointer to the copied or (s)acked TcpTxItem
+   */
+  typedef void (* TcpTxItemTracedCallback)(TcpTxItem *);
 private:
   friend std::ostream & operator<< (std::ostream & os, TcpTxBuffer const & tcpTxBuf);
 
@@ -616,6 +626,8 @@ private:
   uint32_t m_segmentSize {0}; //!< Segment size from TcpSocketBase
   bool     m_renoSack {false}; //!< Indicates if AddRenoSack was called
 
+  TracedCallback<TcpTxItem *> m_ackedSackedTrace;  //!< Trace of (s)acked packets
+  TracedCallback<TcpTxItem *> m_txItemCopiedTrace; //!< Trace of copied packets
 };
 
 /**

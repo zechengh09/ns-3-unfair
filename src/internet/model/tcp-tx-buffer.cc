@@ -84,6 +84,14 @@ TcpTxBuffer::GetTypeId (void)
                      "First unacknowledged sequence number (SND.UNA)",
                      MakeTraceSourceAccessor (&TcpTxBuffer::m_firstByteSeq),
                      "ns3::SequenceNumber32TracedValueCallback")
+    .AddTraceSource ("ItemSackedAcked",
+                     "Call when a TcpTxItem is (s)acked",
+                     MakeTraceSourceAccessor (&TcpTxBuffer::m_ackedSackedTrace),
+                     "ns3::TcpTxBuffer::TcpTxItemTracedCallback")
+    .AddTraceSource ("ItemToSend",
+                     "Call when a TcpTxItem is copied to send",
+                     MakeTraceSourceAccessor (&TcpTxBuffer::m_txItemCopiedTrace),
+                     "ns3::TcpTxBuffer::TcpTxItemTracedCallback")
   ;
   return tid;
 }
@@ -226,6 +234,7 @@ TcpTxBuffer::CopyFromSequence (uint32_t numBytes, const SequenceNumber32& seq)
 
   if (s == 0)
     {
+      m_txItemCopiedTrace (nullptr);
       return Create<Packet> ();
     }
 
@@ -272,6 +281,7 @@ TcpTxBuffer::CopyFromSequence (uint32_t numBytes, const SequenceNumber32& seq)
                  "Returning an item " << *outItem << " with SND.UNA as " <<
                  m_firstByteSeq);
   ConsistencyCheck ();
+  m_txItemCopiedTrace (outItem);
   return toRet;
 }
 
@@ -684,6 +694,8 @@ TcpTxBuffer::DiscardUpTo (const SequenceNumber32& seq)
                      "Item starts at " << item->m_startSeq <<
                      " while SND.UNA is " << m_firstByteSeq << " from " << *this);
 
+      m_ackedSackedTrace (item);
+
       if (offset >= pktSize)
         { // This packet is behind the seqnum. Remove this packet from the buffer
           m_size -= pktSize;
@@ -803,6 +815,8 @@ TcpTxBuffer::Update (const TcpOptionSack::SackList &list)
                       (*item_it)->m_lost = false;
                       m_lostOut -= (*item_it)->m_packet->GetSize ();
                     }
+
+                  m_ackedSackedTrace (*item_it);
 
                   (*item_it)->m_sacked = true;
                   m_sackedOut += (*item_it)->m_packet->GetSize ();
