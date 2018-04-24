@@ -97,13 +97,18 @@ ClassicRecoveryTest::DoRun ()
                          "cWndInfl should be set to (ssThresh + dupAckCount * segmentSize) on entering recovery");
 
   uint32_t cWndInflPrevious = m_state->m_cWndInfl;
+  uint32_t cWndPrevious = m_state->m_cWnd;
   recovery->DoRecovery (m_state);
   NS_TEST_ASSERT_MSG_EQ (m_state->m_cWndInfl, (cWndInflPrevious + m_state->m_segmentSize),
                          "m_cWndInfl should be incresed by one segmentSize on calling DoRecovery");
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd, cWndPrevious,
+                         "cWnd should not change in recovery");
 
   recovery->ExitRecovery (m_state);
   NS_TEST_ASSERT_MSG_EQ (m_state->m_cWndInfl, m_state->m_ssThresh,
                          "cWndInfl should be set to ssThresh on exiting recovery");
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd, m_state->m_ssThresh,
+                         "cWnd should be set to ssThresh on exiting recovery");
 }
 
 /**
