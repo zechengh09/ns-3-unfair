@@ -1555,7 +1555,11 @@ TcpSocketBase::EnterRecovery ()
   // compatibility with old ns-3 versions
   uint32_t bytesInFlight = m_sackEnabled ? BytesInFlight () : BytesInFlight () + m_tcb->m_segmentSize;
   m_tcb->m_ssThresh = m_congestionControl->GetSsThresh (m_tcb, bytesInFlight);
-  m_recoveryOps->EnterRecovery (m_tcb, m_dupAckCount);
+
+  if (!m_congestionControl->HasCongControl ())
+    {
+      m_recoveryOps->EnterRecovery (m_tcb, m_dupAckCount);
+    }
 
   NS_LOG_INFO (m_dupAckCount << " dupack. Enter fast recovery mode." <<
                "Reset cwnd to " << m_tcb->m_cWnd << ", ssthresh to " <<
@@ -1613,9 +1617,12 @@ TcpSocketBase::DupAck ()
         // has left the network. This is equivalent to a SACK of one block.
         m_txBuffer->AddRenoSack ();
       }
-      m_recoveryOps->DoRecovery (m_tcb);
-      NS_LOG_INFO (m_dupAckCount << " Dupack received in fast recovery mode."
-                   "Increase cwnd to " << m_tcb->m_cWnd);
+      if (!m_congestionControl->HasCongControl ())
+        {
+          m_recoveryOps->DoRecovery (m_tcb);
+          NS_LOG_INFO (m_dupAckCount << " Dupack received in fast recovery mode."
+                       "Increase cwnd to " << m_tcb->m_cWnd);
+        }
     }
   else if (m_tcb->m_congState == TcpSocketState::CA_DISORDER)
     {
@@ -1690,6 +1697,12 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
   ProcessAck (ackNumber, scoreboardUpdated, oldHeadSequence);
 
   GenerateRateSample ();
+
+  if (m_congestionControl->HasCongControl ())
+    {
+      m_congestionControl->CongControl (m_tcb, &m_rs);
+      m_tcb->m_cWndInfl = m_tcb->m_cWnd;
+    }
 
   // If there is any data piggybacked, store it into m_rxBuffer
   if (packet->GetSize () > 0)
@@ -1824,11 +1837,15 @@ TcpSocketBase::ProcessAck (const SequenceNumber32 &ackNumber, bool scoreboardUpd
               // probably is better to retransmit it
               m_txBuffer->DeleteRetransmittedFlagFromHead ();
             }
-          DoRetransmit (); // Assume the next seq is lost. Retransmit lost packet
-          m_tcb->m_cWndInfl = SafeSubtraction (m_tcb->m_cWndInfl, bytesAcked);
-          if (segsAcked >= 1)
+
+          if (!m_congestionControl->HasCongControl ())
             {
-              m_recoveryOps->DoRecovery (m_tcb);
+              DoRetransmit (); // Assume the next seq is lost. Retransmit lost packet
+              m_tcb->m_cWndInfl = SafeSubtraction (m_tcb->m_cWndInfl, bytesAcked);
+              if (segsAcked >= 1)
+                {
+                  m_recoveryOps->DoRecovery (m_tcb);
+                }
             }
 
           // This partial ACK acknowledge the fact that one segment has been
@@ -1862,15 +1879,17 @@ TcpSocketBase::ProcessAck (const SequenceNumber32 &ackNumber, bool scoreboardUpd
       else if (ackNumber < m_recover && m_tcb->m_congState == TcpSocketState::CA_LOSS)
         {
           m_congestionControl->PktsAcked (m_tcb, segsAcked, m_tcb->m_lastRtt);
-          m_congestionControl->IncreaseWindow (m_tcb, segsAcked);
-
-          NS_LOG_DEBUG (" Cong Control Called, cWnd=" << m_tcb->m_cWnd <<
-                        " ssTh=" << m_tcb->m_ssThresh);
-          if (!m_sackEnabled)
+          if (!m_congestionControl->HasCongControl ())
             {
-              NS_ASSERT_MSG (m_txBuffer->GetSacked () == 0,
-                             "Some segment got dup-acked in CA_LOSS state: " <<
-                             m_txBuffer->GetSacked ());
+              m_congestionControl->IncreaseWindow (m_tcb, segsAcked);
+              NS_LOG_DEBUG (" Cong Control Called, cWnd=" << m_tcb->m_cWnd <<
+                            " ssTh=" << m_tcb->m_ssThresh);
+              if (!m_sackEnabled)
+                {
+                  NS_ASSERT_MSG (m_txBuffer->GetSacked () == 0,
+                                 "Some segment got dup-acked in CA_LOSS state: " <<
+                                 m_txBuffer->GetSacked ());
+                }
             }
           NewAck (ackNumber, true);
         }
@@ -1949,16 +1968,20 @@ TcpSocketBase::ProcessAck (const SequenceNumber32 &ackNumber, bool scoreboardUpd
           if (exitedFastRecovery)
             {
               NewAck (ackNumber, true);
-              m_recoveryOps->ExitRecovery (m_tcb);
-              NS_LOG_DEBUG ("Leaving Fast Recovery; BytesInFlight() = " <<
-                            BytesInFlight () << "; cWnd = " << m_tcb->m_cWnd);
+              if (!m_congestionControl->HasCongControl ())
+                {
+                  m_recoveryOps->ExitRecovery (m_tcb);
+                  NS_LOG_DEBUG ("Leaving Fast Recovery; BytesInFlight() = " <<
+                                BytesInFlight () << "; cWnd = " << m_tcb->m_cWnd);
+                }
             }
           else
             {
-              m_congestionControl->IncreaseWindow (m_tcb, segsAcked);
-
-              m_tcb->m_cWndInfl = m_tcb->m_cWnd;
-
+              if (!m_congestionControl->HasCongControl ())
+                {
+                  m_congestionControl->IncreaseWindow (m_tcb, segsAcked);
+                  m_tcb->m_cWndInfl = m_tcb->m_cWnd;
+                }
               NS_LOG_LOGIC ("Congestion control called: " <<
                             " cWnd: " << m_tcb->m_cWnd <<
                             " ssTh: " << m_tcb->m_ssThresh <<
