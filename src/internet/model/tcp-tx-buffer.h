@@ -41,7 +41,7 @@ struct RateSample
   uint32_t      m_isAppLimited;   //!< Indicates whether the rate sample is application-limited
   Time          m_interval;       //!< The length of the sampling interval
   uint32_t      m_delivered;      //!< The amount of data marked as delivered over the sampling interval
-  uint32_t      m_priorDelivered; //!< The delivered count of the most recent packet delivered
+  uint32_t      m_priorDelivered {0}; //!< The delivered count of the most recent packet delivered
   Time          m_priorTime;      //!< The delivered time of the most recent packet delivered
   Time          m_sendElapsed;    //!< Send time interval calculated from the most recent packet delivered
   Time          m_ackElapsed;     //!< ACK time interval calculated from the most recent packet delivered
@@ -538,6 +538,8 @@ private:
    * \returns the item that contains the right packet
    */
   TcpTxItem* GetTransmittedSegment (uint32_t numBytes, const SequenceNumber32 &seq);
+
+  TcpTxItem* MarkTransmittedSegment (uint32_t numBytes, const SequenceNumber32 &seq);
 
   /**
    * \brief Get a block (which is returned as Packet) from a list
