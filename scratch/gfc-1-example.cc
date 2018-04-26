@@ -375,20 +375,20 @@ int main (int argc, char *argv[])
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("50Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.25ms"));
   trunkLink.push_back (pointToPointRouter);
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("150Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.25ms"));
   trunkLink.push_back (pointToPointRouter);
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("150Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.25ms"));
   trunkLink.push_back (pointToPointRouter);
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("100Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.25ms"));
   trunkLink.push_back (pointToPointRouter);
 
   PointToPointHelper pointToPointLeaf;
-  pointToPointLeaf.SetDeviceAttribute    ("DataRate", StringValue ("1000Mbps"));
+  pointToPointLeaf.SetDeviceAttribute    ("DataRate", StringValue ("150Mbps"));
   pointToPointLeaf.SetChannelAttribute   ("Delay", StringValue ("0.001ms"));
 
   PointToPointGfcHelper gfc (5, nodes, trunkLink, pointToPointLeaf);
