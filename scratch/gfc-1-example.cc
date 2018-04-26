@@ -125,6 +125,46 @@ CwndChangeD1 (uint32_t oldCwnd, uint32_t newCwnd)
 }
 
 static void
+CwndChangeD2 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/D2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeD3 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/D3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeD4 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/D4.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeD5 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/D5.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeD6 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/D6.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
 CwndChangeE1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
   std::ofstream fPlotQueue (dir + "cwndTraces/E1.plotme", std::ios::out | std::ios::app);
@@ -141,6 +181,38 @@ CwndChangeE2 (uint32_t oldCwnd, uint32_t newCwnd)
 }
 
 static void
+CwndChangeE3 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/E3.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeE4 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/E4.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeE5 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/E5.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
+CwndChangeE6 (uint32_t oldCwnd, uint32_t newCwnd)
+{
+  std::ofstream fPlotQueue (dir + "cwndTraces/E6.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
+  fPlotQueue.close ();
+}
+
+static void
 CwndChangeF1 (uint32_t oldCwnd, uint32_t newCwnd)
 {
   std::ofstream fPlotQueue (dir + "cwndTraces/F1.plotme", std::ios::out | std::ios::app);
@@ -149,73 +221,9 @@ CwndChangeF1 (uint32_t oldCwnd, uint32_t newCwnd)
 }
 
 static void
-CwndChangeG1 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChangeF2 (uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir + "cwndTraces/G1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeG2 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/G2.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeG3 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/G3.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeG4 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/G4.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeG5 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/G5.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeG6 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/G6.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeG7 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/G7.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeH1 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/H1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeH2 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/H2.plotme", std::ios::out | std::ios::app);
+  std::ofstream fPlotQueue (dir + "cwndTraces/F2.plotme", std::ios::out | std::ios::app);
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd / 1446.0 << std::endl;
   fPlotQueue.close ();
 }
@@ -274,7 +282,7 @@ void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port,
 //    {
 //      Simulator::Schedule (timeToStart + Seconds (0.001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
 //    }
-  Simulator::Schedule (Seconds (2.0), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
+  Simulator::Schedule (Seconds (1), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
   sourceApps.Stop (Seconds (stopTime));
 }
 
@@ -356,9 +364,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::RedQueueDisc::LinkDelay", TimeValue (MilliSeconds (13.33)));
 
   std::vector <std::pair <uint32_t, uint32_t> > nodes;
-  nodes.push_back (std::make_pair (0,3));
-  nodes.push_back (std::make_pair (1,3));
-  nodes.push_back (std::make_pair (1,2));
+  nodes.push_back (std::make_pair (0,2));
   nodes.push_back (std::make_pair (1,2));
   nodes.push_back (std::make_pair (1,1));
   nodes.push_back (std::make_pair (2,1));
@@ -369,29 +375,23 @@ int main (int argc, char *argv[])
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("50Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("13.33ms"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
+  trunkLink.push_back (pointToPointRouter);
+  pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("150Mbps"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
+  trunkLink.push_back (pointToPointRouter);
+  pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("150Mbps"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
   trunkLink.push_back (pointToPointRouter);
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("100Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("6.66ms"));
-  trunkLink.push_back (pointToPointRouter);
-  pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("50Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("3.33ms"));
-  trunkLink.push_back (pointToPointRouter);
-  pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("150Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("3.33ms"));
-  trunkLink.push_back (pointToPointRouter);
-  pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("150Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("3.33ms"));
-  trunkLink.push_back (pointToPointRouter);
-  pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("50Mbps"));
-  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("6.66ms"));
+  pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("0.16ms"));
   trunkLink.push_back (pointToPointRouter);
 
   PointToPointHelper pointToPointLeaf;
   pointToPointLeaf.SetDeviceAttribute    ("DataRate", StringValue ("1000Mbps"));
   pointToPointLeaf.SetChannelAttribute   ("Delay", StringValue ("0.001ms"));
 
-  PointToPointGfcHelper gfc (7, nodes, trunkLink, pointToPointLeaf);
+  PointToPointGfcHelper gfc (5, nodes, trunkLink, pointToPointLeaf);
 
 
   // Install Stack
@@ -405,77 +405,73 @@ int main (int argc, char *argv[])
 
   uint16_t port = 50000;
 
-  InstallPacketSink (gfc.GetUp (5, 0), port);      // A Sink 0 Applications
-  InstallPacketSink (gfc.GetUp (5, 0), port + 1);  // A Sink 1 Applications
-  InstallPacketSink (gfc.GetUp (5, 0), port + 2);  // A Sink 2 Applications
+  InstallPacketSink (gfc.GetUp (3, 0), port);      // A Sink 0 Applications
+  InstallPacketSink (gfc.GetUp (3, 0), port + 1);  // A Sink 1 Applications
+  InstallPacketSink (gfc.GetUp (3, 0), port + 2);  // A Sink 2 Applications
 
-  InstallPacketSink (gfc.GetUp (6, 1), port);      // B Sink 3 Applications
-  InstallPacketSink (gfc.GetUp (6, 1), port + 1);  // B Sink 3 Applications
-  InstallPacketSink (gfc.GetUp (6, 1), port + 2);  // B Sink 3 Applications
+  InstallPacketSink (gfc.GetUp (4, 1), port);      // B Sink 3 Applications
+  InstallPacketSink (gfc.GetUp (4, 1), port + 1);  // B Sink 3 Applications
+  InstallPacketSink (gfc.GetUp (4, 1), port + 2);  // B Sink 3 Applications
 
-  InstallPacketSink (gfc.GetUp (5, 1), port);      // C Sink 0 Applications
-  InstallPacketSink (gfc.GetUp (5, 1), port + 1);  // C Sink 1 Applications
-  InstallPacketSink (gfc.GetUp (5, 1), port + 2);  // C Sink 2 Applications
+  InstallPacketSink (gfc.GetUp (3, 1), port);      // C Sink 0 Applications
+  InstallPacketSink (gfc.GetUp (3, 1), port + 1);  // C Sink 1 Applications
+  InstallPacketSink (gfc.GetUp (3, 1), port + 2);  // C Sink 2 Applications
 
-  InstallPacketSink (gfc.GetUp (1, 0), port);      // D Sink 1 Application
-
-  InstallPacketSink (gfc.GetUp (2, 0), port);      // E Sink 1 Applications
-  InstallPacketSink (gfc.GetUp (2, 0), port + 1);  // E Sink 2 Applications
-
-  InstallPacketSink (gfc.GetUp (3, 0), port);      // F Sink 1 Application
-
-  for (uint8_t i = 0; i < 7; i++)
+  for (uint8_t i = 0; i < 6; i++)
     {
-      InstallPacketSink (gfc.GetUp (6, 0), port + i);      // G Sink 7 Applications
+      InstallPacketSink (gfc.GetUp (1, 0), port + i);      // D Sink 6 Applications
     }
 
-  InstallPacketSink (gfc.GetUp (4, 0), port);      // H Sink 1 Applications
-  InstallPacketSink (gfc.GetUp (4, 0), port + 1);  // H Sink 2 Applications
+  for (uint8_t i = 0; i < 6; i++)
+    {
+      InstallPacketSink (gfc.GetUp (4, 0), port + i);      // E Sink 6 Applications
+    }
+
+  InstallPacketSink (gfc.GetUp (2, 0), port);      // F Sink 1 Application
+  InstallPacketSink (gfc.GetUp (2, 0), port + 1);      // F Sink 2 Application
+
 
   // Application A
-  InstallBulkSend (gfc.GetDown (0, 0), gfc.GetUpIpv4Address (5, 0), port, 7, 0, MakeCallback (&CwndChangeA1));
-  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (5, 0), port + 1, 12, 0, MakeCallback (&CwndChangeA2));
-  InstallBulkSend (gfc.GetDown (2, 0), gfc.GetUpIpv4Address (5, 0), port + 2, 15, 0, MakeCallback (&CwndChangeA3));
+  InstallBulkSend (gfc.GetDown (0, 0), gfc.GetUpIpv4Address (3, 0), port + 0, 5, 0, MakeCallback (&CwndChangeA1));
+  InstallBulkSend (gfc.GetDown (0, 0), gfc.GetUpIpv4Address (3, 0), port + 1, 5, 1, MakeCallback (&CwndChangeA2));
+  InstallBulkSend (gfc.GetDown (0, 0), gfc.GetUpIpv4Address (3, 0), port + 2, 5, 2, MakeCallback (&CwndChangeA3));
 
   // Application B
-  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (6, 1), port, 8, 0, MakeCallback (&CwndChangeB1));
-  InstallBulkSend (gfc.GetDown (1, 2), gfc.GetUpIpv4Address (6, 1), port + 1, 13, 0, MakeCallback (&CwndChangeB2));
-  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (6, 1), port + 2, 18, 0, MakeCallback (&CwndChangeB3));
+  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (4, 1), port + 0, 8, 0, MakeCallback (&CwndChangeB1));
+  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (4, 1), port + 1, 8, 1, MakeCallback (&CwndChangeB2));
+  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (4, 1), port + 2, 8, 2, MakeCallback (&CwndChangeB3));
 
   // Application C
-  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port, 21, 0, MakeCallback (&CwndChangeC1));
-  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port + 1, 21, 1, MakeCallback (&CwndChangeC2));
-  InstallBulkSend (gfc.GetDown (4, 0), gfc.GetUpIpv4Address (5, 1), port + 2, 21, 2, MakeCallback (&CwndChangeC3));
+  InstallBulkSend (gfc.GetDown (2, 0), gfc.GetUpIpv4Address (3, 1), port + 0, 11, 0, MakeCallback (&CwndChangeC1));
+  InstallBulkSend (gfc.GetDown (2, 0), gfc.GetUpIpv4Address (3, 1), port + 1, 11, 1, MakeCallback (&CwndChangeC2));
+  InstallBulkSend (gfc.GetDown (2, 0), gfc.GetUpIpv4Address (3, 1), port + 2, 11, 2, MakeCallback (&CwndChangeC3));
 
   // Application D
-  InstallBulkSend (gfc.GetDown (0, 2), gfc.GetUpIpv4Address (1, 0), port, 9, 0, MakeCallback (&CwndChangeD1));
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (1, 0), port + 0, 6, 0, MakeCallback (&CwndChangeD1));
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (1, 0), port + 1, 6, 1, MakeCallback (&CwndChangeD2));
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (1, 0), port + 2, 6, 2, MakeCallback (&CwndChangeD3));
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (1, 0), port + 3, 6, 3, MakeCallback (&CwndChangeD4));
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (1, 0), port + 4, 6, 4, MakeCallback (&CwndChangeD5));
+  InstallBulkSend (gfc.GetDown (0, 1), gfc.GetUpIpv4Address (1, 0), port + 5, 6, 5, MakeCallback (&CwndChangeD6));
 
   // Application E
-  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (2, 0), port, 11, 0, MakeCallback (&CwndChangeE1));
-  InstallBulkSend (gfc.GetDown (1, 0), gfc.GetUpIpv4Address (2, 0), port + 1, 11, 1, MakeCallback (&CwndChangeE2));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 0, 14, 0, MakeCallback (&CwndChangeE1));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 1, 14, 1, MakeCallback (&CwndChangeE2));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 2, 14, 2, MakeCallback (&CwndChangeE3));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 3, 14, 3, MakeCallback (&CwndChangeE4));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 4, 14, 4, MakeCallback (&CwndChangeE5));
+  InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 5, 14, 5, MakeCallback (&CwndChangeE6));
 
   // Application F
-  InstallBulkSend (gfc.GetDown (2, 1), gfc.GetUpIpv4Address (3, 0), port, 16, 0, MakeCallback (&CwndChangeF1));
-
-  // Application G
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 0, 24, 0, MakeCallback (&CwndChangeG1));
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 1, 24, 1, MakeCallback (&CwndChangeG2));
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 2, 24, 2, MakeCallback (&CwndChangeG3));
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 3, 24, 3, MakeCallback (&CwndChangeG4));
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 4, 24, 4, MakeCallback (&CwndChangeG5));
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 5, 24, 5, MakeCallback (&CwndChangeG6));
-  InstallBulkSend (gfc.GetDown (5, 0), gfc.GetUpIpv4Address (6, 0), port + 6, 24, 6, MakeCallback (&CwndChangeG7));
-
-  // Application H
-  InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port, 19, 0, MakeCallback (&CwndChangeH1));
-  InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port + 1, 19, 1, MakeCallback (&CwndChangeH2));
+  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (2, 0), port + 0, 10, 0, MakeCallback (&CwndChangeF1));
+  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (2, 0), port + 1, 10, 1, MakeCallback (&CwndChangeF2));
 
   dir = "results/" + currentTime + "/";
   std::string dirToSave = "mkdir -p " + dir;
   system (dirToSave.c_str ());
   system ((dirToSave + "/pcap/").c_str ());
   system ((dirToSave + "/cwndTraces/").c_str ());
-  system (("cp -R PlotScripts/* " + dir + "/pcap/").c_str ());
+  system (("cp -R PlotScripts-1/* " + dir + "/pcap/").c_str ());
 
   TrafficControlHelper tch;
   tch.SetRootQueueDisc (queue_disc_type);
