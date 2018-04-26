@@ -1,0 +1,8 @@
+set xrange [2:10]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-Router.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (Mbps)"
+set key outside;
+set key right top;
+plot "TP-R1.plotme" title "R1" with lines lw 1.5,"TP-R2.plotme" title "R2" with lines lw 1.5,"TP-R3.plotme" title "R3" with lines lw 1.5,"TP-R4.plotme" title "R4" with lines lw 1.5
