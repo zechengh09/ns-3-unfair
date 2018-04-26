@@ -1,0 +1,56 @@
+set xrange [2:10]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndA.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "A1.plotme" title "A1" with lines lw 1.5,"A2.plotme" title "A2" with lines lw 1.5,"A3.plotme" title "A3" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndB.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "B1.plotme" title "B1" with lines lw 1.5,"B2.plotme" title "B2" with lines lw 1.5,"B3.plotme" title "B3" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndC.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "C1.plotme" title "C1" with lines lw 1.5,"C2.plotme" title "C2" with lines lw 1.5,"C3.plotme" title "C3" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndDF.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "D1.plotme" title "D1" with lines lw 1.5, "F1.plotme" title "F1" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndE.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "E1.plotme" title "E1" with lines lw 1.5,"E2.plotme" title "E2" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndG.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "G1.plotme" title "G1" with lines lw 1.5,"G2.plotme" title "G2" with lines lw 1.5,"G3.plotme" title "G3" with lines lw 1.5,"G4.plotme" title "G4" with lines lw 1.5,"G5.plotme" title "G5" with lines lw 1.5,"G6.plotme" title "G6" with lines lw 1.5,"G7.plotme" title "G7" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndH.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "H1.plotme" title "H1" with lines lw 1.5,"H2.plotme" title "H2" with lines lw 1.5

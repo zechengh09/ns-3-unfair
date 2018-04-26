@@ -1,0 +1,16 @@
+set xrange [2:10]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (Mbps)"
+set key outside;
+set key right top;
+plot "TP-R1.plotme" title "R1" with lines lw 1.5,"TP-R2.plotme" title "R2" with lines lw 1.5,"TP-R3.plotme" title "R3" with lines lw 1.5,"TP-R4.plotme" title "R4" with lines lw 1.5,"TP-R5.plotme" title "R5" with lines lw 1.5, "TP-R6.plotme" title "R6" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TPPercent.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (%)"
+set key outside;
+set key right top;
+plot "TP-R1.plotme" using ($1):($2/.500) title "R1" with lines lw 1.5, "TP-R2.plotme" using ($1):($2/1.000) title "R2" with lines lw 1.5, "TP-R3.plotme" using ($1):($2/.500) title "R3" with lines lw 1.5, "TP-R4.plotme" using ($1):($2/1.50) title "R4" with lines lw 1.5,"TP-R5.plotme" using ($1):($2/1.50) title "R5" with lines lw 1.5, "TP-R6.plotme" using ($1):($2/.50) title "R6" with lines lw 1.5
