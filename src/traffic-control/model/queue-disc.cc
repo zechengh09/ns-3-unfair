@@ -436,6 +436,12 @@ QueueDisc::GetStats (void)
   return m_stats;
 }
 
+Time
+QueueDisc::GetPacketSojournTime () const
+{
+  return m_sojourn;
+}
+
 uint32_t
 QueueDisc::GetNPackets () const
 {

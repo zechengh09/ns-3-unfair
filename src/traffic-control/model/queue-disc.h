@@ -288,6 +288,8 @@ public:
 
   virtual ~QueueDisc ();
 
+  Time GetPacketSojournTime () const;
+
   /**
    * \brief Get the number of packets stored by the queue disc
    * \return the number of packets stored by the queue disc.
