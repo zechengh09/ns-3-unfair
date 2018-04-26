@@ -23,7 +23,7 @@ set key right top;
 plot "C1.plotme" title "C1" with lines lw 1.5,"C2.plotme" title "C2" with lines lw 1.5,"C3.plotme" title "C3" with lines lw 1.5
 
 set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
-set output "CwndDF.png"
+set output "CwndD.png"
 set xlabel "Time (sec)" font "Verdana"
 set ylabel "Cwnd (Packets)" font "Verdana"
 set key outside;
@@ -37,3 +37,11 @@ set ylabel "Cwnd (Packets)" font "Verdana"
 set key outside;
 set key right top;
 plot "E1.plotme" title "E1" with lines lw 1.5,"E2.plotme" title "E2" with lines lw 1.5, "E3.plotme" title "E3" with lines lw 1.5,"E4.plotme" title "E4" with lines lw 1.5, "E5.plotme" title "E5" with lines lw 1.5,"E6.plotme" title "E6" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndF.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "C1.plotme" title "F1" with lines lw 1.5,"C2.plotme" title "F2" with lines lw 1.5

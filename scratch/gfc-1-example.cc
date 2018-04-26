@@ -463,8 +463,8 @@ int main (int argc, char *argv[])
   InstallBulkSend (gfc.GetDown (3, 0), gfc.GetUpIpv4Address (4, 0), port + 5, 14, 5, MakeCallback (&CwndChangeE6));
 
   // Application F
-  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (2, 0), port + 0, 10, 0, MakeCallback (&CwndChangeF1));
-  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (2, 0), port + 1, 10, 1, MakeCallback (&CwndChangeF2));
+  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (2, 0), port + 0, 9, 0, MakeCallback (&CwndChangeF1));
+  InstallBulkSend (gfc.GetDown (1, 1), gfc.GetUpIpv4Address (2, 0), port + 1, 9, 1, MakeCallback (&CwndChangeF2));
 
   dir = "results/" + currentTime + "/";
   std::string dirToSave = "mkdir -p " + dir;
