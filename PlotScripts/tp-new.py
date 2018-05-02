@@ -58,6 +58,7 @@ with open(file_name[0:file_name.rindex('.')] + '.csv') as fq:
             totalvalPacket += 1
             if (new_time - old_time > 0.1):
                 val = val/(new_time - old_time)
+                valPacket = valPacket/(new_time - old_time)
                 fBytes.write(str(p) + " " + str(val * 8.0/(1000.0 * 1000.0)) + "\n")
                 fPackets.write(str(p) + " " + str(valPacket) + "\n")
                 p += (new_time - old_time)
