@@ -50,7 +50,7 @@ totalvalPacket = 0
 with open(file_name[0:file_name.rindex('.')] + '.csv') as fq:
     fp = fq.readlines()
     for line in fp:
-        if (destIp == None or str(line.split('\t')[2]).strip () == destIp) and float(line.split('\t')[1]) == packetSize and float(line.split('\t')[0]) >= startTime and (destPort == None or destPort == int (line.split('\t')[3]).strip ()):
+        if (destIp == None or str(line.split('\t')[2]).strip () == destIp) and float(line.split('\t')[1]) == packetSize and float(line.split('\t')[0]) >= startTime and (destPort == None or destPort == int (line.split('\t')[3].strip ())):
             new_time = float(line.split('\t')[0])
             val += float(line.split('\t')[1])
             totalval += float(line.split('\t')[1])
