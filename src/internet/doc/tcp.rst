@@ -760,6 +760,7 @@ phase or not
 
 More information (paper): http://cs.northwestern.edu/~akuzma/rice/doc/TCP-LP.pdf
 
+<<<<<<< HEAD
 Support for Explicit Congestion Notification (ECN)
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -940,6 +941,7 @@ section below on :ref:`Writing-tcp-tests`.
 * **tcp-illinois-test:** Unit tests on the Illinois congestion control
 * **tcp-ledbat-test:** Unit tests on the LEDBAT congestion control
 * **tcp-lp-test:** Unit tests on the TCP-LP congestion control
+* **tcp-bbr-test:** Unit tests on the BBR congestion control
 * **tcp-option:** Unit tests on TCP options
 * **tcp-pkts-acked-test:** Unit test the number of time that PktsAcked is called
 * **tcp-rto-test:** Unit test behavior after a RTO timeout occurs
@@ -1120,6 +1122,33 @@ performs the necessary congestion window changes as per the recovery algorithm.
 ExitRecovery is called just prior to exiting recovery phase in order to perform the
 required congestion window ajustments. UpdateBytesSent is used to keep track of
 bytes sent and is called whenever a data packet is sent during recovery phase.
+
+Delivery Rate Estimation
+++++++++++++++++++++++++
+Current TCP implementation measures the approximate value of the delivery rate of
+inflight data based on Delivery Rate Estimation.
+
+High level idea:
+The algorithm keeps track of 2 variables:
+
+1. `delivered`: Total amount of data delivered so far.
+
+2. `deliveredStamp`: Last time `delivered` was updated.
+
+When a packet is transmitted, the value of `delivered (d0)` and `deliveredStamp (t0)`
+is stored in its respective TcpTxItem using `UpdatePacketSent ()`.
+
+When an acknowledgement comes for this packet, the value of `delivered` and `deliveredStamp`
+is updated to `d1` and `t1` using `UpdateRateSample ()`.
+
+After processing the acknowledgement, the rate sample is calculated using `GenerateRateSample ()`,
+
+.. math:: delivery_rate = (d1 - d0)/(t1 - t0)
+
+
+The implementation to estimate delivery rate is available under TcpTxBuffer.
+
+More information (Delivery Rate Estimation): https://tools.ietf.org/html/draft-cheng-iccrg-delivery-rate-estimation-00
 
 Current limitations
 +++++++++++++++++++
