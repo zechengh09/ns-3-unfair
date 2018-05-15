@@ -1696,6 +1696,7 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
   // scoreboard MUST be updated via the Update () routine (done in ReadOptions)
   uint32_t bytesSacked = 0;
   uint32_t previousLost = m_txBuffer->GetLost ();
+  uint32_t priorInFlight = m_tcb->m_bytesInFlight.Get ();
   ReadOptions (tcpHeader, &bytesSacked);
 
   SequenceNumber32 ackNumber = tcpHeader.GetAckNumber ();
@@ -1724,8 +1725,8 @@ TcpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
       uint32_t lost = (currentLost > previousLost) ?
             currentLost - previousLost :
             previousLost - currentLost;
-      auto rateSample = m_rateOps->SampleGen (bytesAcked + bytesSacked,
-                                              lost, false, m_tcb->m_minRtt);
+      auto rateSample = m_rateOps->SampleGen (bytesAcked + bytesSacked, lost,
+                                              false, priorInFlight, m_tcb->m_minRtt);
       m_congestionControl->CongControl(m_tcb, rateSample);
     }
 

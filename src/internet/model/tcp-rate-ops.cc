@@ -49,7 +49,7 @@ TcpRateLinux::GetTypeId (void)
 
 const TcpRateOps::TcpRateSample &
 TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
-                        const Time &minRtt)
+                        uint32_t priorInFlight, const Time &minRtt)
 {
   NS_LOG_FUNCTION (this << delivered << lost << is_sack_reneg);
 
@@ -58,8 +58,14 @@ TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
       m_rate.m_appLimited = 0;
     }
 
+  m_rateSample.m_ackedSacked = delivered;   /* freshly ACKed or SACKed */
+  m_rateSample.m_bytesLoss   = lost;        /* freshly marked lost */
+  m_rateSample.m_priorDelivered = priorInFlight;
+
   if (m_rateSample.m_priorTime == Seconds (0))
     {
+      m_rateSample.m_delivered = -1;
+      m_rateSample.m_interval = Seconds (0);
       return m_rateSample;
     }
 
@@ -68,14 +74,26 @@ TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
 
   if (m_rateSample.m_interval < minRtt)
     {
-      m_rateSample.m_interval = Seconds (0);
+      m_rateSample.m_interval  = Seconds (0);
+      m_rateSample.m_priorTime = Seconds (0); // To make rate sample invalid
       return m_rateSample;
     }
 
-  if (m_rateSample.m_interval != Seconds (0))
+  /* Record the last non-app-limited or the highest app-limited bw */
+  if (!m_rateSample.m_isAppLimited ||
+      (m_rateSample.m_delivered * m_rate.m_rateInterval >=
+       m_rate.m_rateDelivered * m_rateSample.m_interval))
     {
+      m_rate.m_rateDelivered  = m_rateSample.m_delivered;
+      m_rate.m_rateInterval   = m_rateSample.m_interval;
+      m_rate.m_rateAppLimited = m_rateSample.m_isAppLimited;
       m_rateSample.m_deliveryRate = DataRate (m_rateSample.m_delivered * 8.0 / m_rateSample.m_interval.GetSeconds ());
     }
+
+//  if (m_rateSample.m_interval != Seconds (0))
+//    {
+//      m_rateSample.m_deliveryRate = DataRate (m_rateSample.m_delivered * 8.0 / m_rateSample.m_interval.GetSeconds ());
+//    }
 
   return m_rateSample;
 
@@ -153,7 +171,7 @@ TcpRateLinux::CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
       m_rate.m_appLimited = std::max (m_rate.m_delivered + in_flight, 1UL);
     }
 
-  m_rate.m_appLimited = 0U;
+//  m_rate.m_appLimited = 0U; Not needed
 
 //  Linux Code, adapted
 //
@@ -186,13 +204,13 @@ TcpRateLinux::SkbDelivered (TcpTxItem * skb)
   m_rate.m_delivered    += skb->GetSeqSize();
   m_rate.m_deliveredTime = Simulator::Now ();
 
-  if (skbInfo.m_delivered > m_rateSample.m_priorDelivered)
+  if (!m_rateSample.m_priorDelivered || skbInfo.m_delivered > m_rateSample.m_priorDelivered)
     {
       m_rateSample.m_priorDelivered   = skbInfo.m_delivered;
       m_rateSample.m_priorTime        = skbInfo.m_deliveredTime;
       m_rateSample.m_isAppLimited     = skbInfo.m_isAppLimited;
       m_rateSample.m_sendElapsed      = skb->GetLastSent () - skbInfo.m_firstSent;
-      m_rateSample.m_ackElapsed       = skbInfo.m_deliveredTime - skbInfo.m_deliveredTime;
+      m_rateSample.m_ackElapsed       = Simulator::Now () - skbInfo.m_deliveredTime;
 
       m_rate.m_firstSentTime          = skb->GetLastSent ();
     }

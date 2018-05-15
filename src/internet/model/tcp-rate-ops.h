@@ -22,6 +22,7 @@
 #include "ns3/tcp-tx-item.h"
 #include "ns3/traced-callback.h"
 #include "ns3/data-rate.h"
+#include "ns3/traced-value.h"
 
 namespace ns3 {
 
@@ -92,7 +93,7 @@ public:
    * \return
    */
   virtual const TcpRateSample & SampleGen (uint32_t delivered, uint32_t lost,
-                                           bool is_sack_reneg,
+                                           bool is_sack_reneg, uint32_t priorInFlight,
                                            const Time &minRtt) = 0;
 
   /**
@@ -109,16 +110,16 @@ public:
   struct TcpRateSample
   {
     DataRate      m_deliveryRate   {DataRate ("0bps")};//!< The delivery rate sample
-    uint32_t      m_isAppLimited   {0};                //!< Indicates whether the rate sample is application-limited
+    bool          m_isAppLimited   {false};                //!< Indicates whether the rate sample is application-limited
     Time          m_interval       {Seconds (0.0)};    //!< The length of the sampling interval
-    uint32_t      m_delivered      {0};                //!< The amount of data marked as delivered over the sampling interval
+    int32_t       m_delivered      {0};                //!< The amount of data marked as delivered over the sampling interval
     uint32_t      m_priorDelivered {0};                //!< The delivered count of the most recent packet delivered
     Time          m_priorTime      {Seconds (0.0)};    //!< The delivered time of the most recent packet delivered
     Time          m_sendElapsed    {Seconds (0.0)};    //!< Send time interval calculated from the most recent packet delivered
     Time          m_ackElapsed     {Seconds (0.0)};    //!< ACK time interval calculated from the most recent packet delivered
-    uint32_t      m_packetLoss     {0};                //!< TODO
-    uint32_t      m_priorInFlight  {0};                //!< TODO
-
+    uint32_t      m_bytesLoss      {0};                //!< The amount of data marked as lost from the most recent ack received
+    uint32_t      m_priorInFlight  {0};                //!< The value if bytes in flight prior to last received ack
+    uint32_t      m_ackedSacked    {0};                //!< The amount of data acked and sacked in the last received ack
     /**
      * \brief Is the sample valid?
      * \return true if the sample is valid, false otherwise.
@@ -150,7 +151,7 @@ public:
                                   uint32_t segmentSize, const SequenceNumber32 &tailSeq,
                                   const SequenceNumber32 &nextTx) override;
   virtual const TcpRateSample & SampleGen (uint32_t delivered, uint32_t lost,
-                                           bool is_sack_reneg,
+                                           bool is_sack_reneg, uint32_t priorInFlight,
                                            const Time &minRtt) override;
 
 private:
@@ -163,8 +164,10 @@ private:
     Time                   m_deliveredTime   {Seconds (0)}; //!< Simulator time when m_delivered was last updated
     Time                   m_firstSentTime   {Seconds (0)}; //!< The send time of the packet that was most recently marked as delivered
     uint32_t               m_appLimited      {0};           //!< The index of the last transmitted packet marked as application-limited
-    uint32_t               m_txItemDelivered {0};           //!< TODO Adding DOC
-    uint32_t               m_lastAckedSackedBytes {0};      //!< Size of data sacked in the last ack
+    uint32_t               m_txItemDelivered {0};           //!< The value of delivered when the acked item was sent
+    TracedValue<int32_t>   m_rateDelivered   {0};           //!< The amount of data delivered considered to calculate delivery rate.
+    TracedValue<Time>      m_rateInterval    {Seconds (0)}; //!< The value of interval considered to calculate delivery rate.
+    TracedValue<bool>      m_rateAppLimited  {false};       //!< Was sample was taken when data is app limited?
   };
 
   // Rate sample related variables
