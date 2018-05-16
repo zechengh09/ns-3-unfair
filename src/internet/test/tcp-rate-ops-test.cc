@@ -91,6 +91,11 @@ TcpRateLinuxBasicTest::DoRun ()
 
   Simulator::Run ();
   Simulator::Destroy ();
+
+  for (uint8_t i = 0; i < 100; ++i)
+    {
+      delete m_skbs[i];
+    }
 }
 
 void
