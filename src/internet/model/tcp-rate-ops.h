@@ -154,7 +154,6 @@ public:
                                            bool is_sack_reneg, uint32_t priorInFlight,
                                            const Time &minRtt) override;
 
-private:
   /**
    * \brief The TcpRate struct
    */
@@ -170,6 +169,26 @@ private:
     bool      m_rateAppLimited  {false};       //!< Was sample was taken when data is app limited?
   };
 
+  /**
+   * TracedCallback signature for tcp rate update events.
+   *
+   * The callback will be fired each time the rate is updated.
+   *
+   * \param [in] rate The rate information.
+   */
+  typedef void (* TcpRateUpdated)(const TcpRate &rate);
+
+  /**
+   * TracedCallback signature for tcp rate sample update events.
+   *
+   * The callback will be fired each time the rate sample is updated.
+   *
+   * \param [in] sample The rate sample that will be passed to congestion control
+   * algorithms.
+   */
+  typedef void (* TcpRateSampleUpdated)(const TcpRateSample &sample);
+
+private:
   // Rate sample related variables
   TcpRate       m_rate;         //!< Rate information
   TcpRateSample m_rateSample;   //!< Rate sample (continuosly updated)

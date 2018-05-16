@@ -43,6 +43,14 @@ TcpRateLinux::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TcpRateLinux")
     .SetParent<TcpRateOps> ()
     .SetGroupName ("Internet")
+    .AddTraceSource ("TcpRateUpdated",
+                     "Tcp rate information has been updated",
+                     MakeTraceSourceAccessor (&TcpRateLinux::m_rateTrace),
+                     "ns3::TcpRateLinux::TcpRateUpdated")
+    .AddTraceSource ("TcpRateSampleUpdated",
+                     "Tcp rate sample has been updated",
+                     MakeTraceSourceAccessor (&TcpRateLinux::m_rateSampleTrace),
+                     "ns3::TcpRateLinux::TcpRateSampleUpdated")
   ;
   return tid;
 }
@@ -72,6 +80,7 @@ TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
     {
       m_rateSample.m_delivered = -1;
       m_rateSample.m_interval = Seconds (0);
+      m_rateSampleTrace (m_rateSample);
       return m_rateSample;
     }
 
@@ -99,6 +108,7 @@ TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
     {
       m_rateSample.m_interval  = Seconds (0);
       m_rateSample.m_priorTime = Seconds (0); // To make rate sample invalid
+      m_rateSampleTrace (m_rateSample);
       return m_rateSample;
     }
 
@@ -113,6 +123,7 @@ TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
       m_rateSample.m_deliveryRate = DataRate (m_rateSample.m_delivered * 8.0 / m_rateSample.m_interval.GetSeconds ());
     }
 
+  m_rateSampleTrace (m_rateSample);
   return m_rateSample;
 }
 
@@ -132,6 +143,7 @@ TcpRateLinux::CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
       in_flight < cWnd)                                        // We are not limited by CWND.
     {
       m_rate.m_appLimited = std::max (m_rate.m_delivered + in_flight, 1UL);
+      m_rateTrace (m_rate);
     }
 
   // m_appLimited will be reset once in SampleGen, if it has to be.
@@ -164,6 +176,8 @@ TcpRateLinux::SkbDelivered (TcpTxItem * skb)
       m_rateSample.m_sendElapsed      = skb->GetLastSent () - skbInfo.m_firstSent;
       m_rateSample.m_ackElapsed       = Simulator::Now () - skbInfo.m_deliveredTime;
 
+      m_rateSampleTrace (m_rateSample);
+
       m_rate.m_firstSentTime          = skb->GetLastSent ();
     }
 
@@ -172,6 +186,7 @@ TcpRateLinux::SkbDelivered (TcpTxItem * skb)
    */
   skbInfo.m_deliveredTime = Time::Max ();
   m_rate.m_txItemDelivered = skbInfo.m_delivered;
+  m_rateTrace (m_rate);
 }
 
 void
@@ -200,6 +215,7 @@ TcpRateLinux::SkbSent (TcpTxItem *skb, bool isStartOfTransmission)
       NS_LOG_INFO ("Starting of a transmission at time " << Simulator::Now().GetSeconds ());
       m_rate.m_firstSentTime = Simulator::Now ();
       m_rate.m_deliveredTime = Simulator::Now ();
+      m_rateTrace (m_rate);
     }
 
   skbInfo.m_firstSent     = m_rate.m_firstSentTime;
