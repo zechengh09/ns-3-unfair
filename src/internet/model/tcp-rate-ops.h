@@ -197,4 +197,36 @@ private:
   TracedCallback<const TcpRateSample &> m_rateSampleTrace; //!< Rate Sample trace (TODO)
 };
 
+/**
+ * \brief Output operator.
+ * \param os The output stream.
+ * \param sample the TcpRateLinux::TcpRateSample to print.
+ * \returns The output stream.
+ */
+std::ostream & operator<< (std::ostream & os, TcpRateLinux::TcpRateSample const & sample);
+
+/**
+ * \brief Output operator.
+ * \param os The output stream.
+ * \param rate the TcpRateLinux::TcpRate to print.
+ * \returns The output stream.
+ */
+std::ostream & operator<< (std::ostream & os, TcpRateLinux::TcpRate const & rate);
+
+/**
+ * Comparison operator
+ * \param lhs left operand
+ * \param rhs right operand
+ * \return true if the operands are equal
+ */
+bool operator== (TcpRateLinux::TcpRateSample const & lhs, TcpRateLinux::TcpRateSample const & rhs);
+
+/**
+ * Comparison operator
+ * \param lhs left operand
+ * \param rhs right operand
+ * \return true if the operands are equal
+ */
+bool operator== (TcpRateLinux::TcpRate const & lhs, TcpRateLinux::TcpRate const & rhs);
+
 } //namespace ns3

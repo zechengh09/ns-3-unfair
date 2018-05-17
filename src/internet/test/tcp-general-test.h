@@ -779,6 +779,24 @@ protected:
   }
 
   /**
+   * \brief Track the rate value of TcpRateLinux.
+   * \param rate updated value of TcpRate.
+   */
+  virtual void RateUpdatedTrace (const TcpRateLinux::TcpRate &rate)
+  {
+    NS_UNUSED (rate);
+  }
+
+  /**
+   * \brief Track the rate sample value of TcpRateLinux.
+   * \param sample updated value of TcpRateSample.
+   */
+  virtual void RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample)
+  {
+    NS_UNUSED (sample);
+  }
+
+  /**
    * \brief Socket closed normally
    * \param who the socket closed (SENDER or RECEIVER)
    */
