@@ -96,12 +96,15 @@ CwndChangeE (uint32_t oldCwnd, uint32_t newCwnd)
 }
 
 static void
-MarkTraceR1 (Ptr<const QueueDiscItem> item, const char* reason)
+DropAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item)
 {
-  static uint32_t i = 0;
-  std::ofstream fPlotQueue (dir+"markTraces/R1.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << ++i << std::endl;
-  fPlotQueue.close ();
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " 1" << std::endl;
+}
+
+static void
+MarkAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item, const char* reason)
+{
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " 1" << std::endl;
 }
 
 void
@@ -139,7 +142,7 @@ int main (int argc, char *argv[])
 {
   uint32_t stream = 1;
   std::string transport_prot = "TcpNewReno";
-  std::string queue_disc_type = "PiQueueDisc";
+  std::string queue_disc_type = "FifoQueueDisc";
   bool useEcn = true;
   uint32_t dataSize = 1446;
   uint32_t delAckCount = 2;
@@ -260,8 +263,12 @@ int main (int argc, char *argv[])
   system ((dirToSave + "/pcap/").c_str ());
   system ((dirToSave + "/cwndTraces/").c_str ());
   system ((dirToSave + "/markTraces/").c_str ());
+  system ((dirToSave + "/queueTraces/").c_str ());
   system (("cp -R PlotScripts-gfc-dumbbell/* " + dir + "/pcap/").c_str ());
 
+  Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 20));
+  Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 20));
+  Config::SetDefault ("ns3::TcpSocket::InitialCwnd", UintegerValue (10));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (delAckCount));
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (dataSize));
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (useEcn));
@@ -270,15 +277,21 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::PiQueueDisc::A", DoubleValue (0.00003029464612));
   Config::SetDefault ("ns3::PiQueueDisc::B", DoubleValue (0.00003011342192));
   Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (94));
-  Config::SetDefault ("ns3::PiQueueDisc::MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::SetDefault (queue_disc_type + "::MaxSize", QueueSizeValue (QueueSize ("375p")));
+
+  AsciiTraceHelper asciiTraceHelper;
+  Ptr<OutputStreamWrapper> streamWrapper;
 
   TrafficControlHelper tch;
-  tch.SetRootQueueDisc ("ns3::PiQueueDisc");
+  tch.SetRootQueueDisc (queue_disc_type);
   QueueDiscContainer qd;
   tch.Uninstall (routers.Get (0)->GetDevice (0));
   qd.Add (tch.Install (routers.Get (0)->GetDevice (0)).Get (0));
   Simulator::ScheduleNow (&CheckQueueSize, qd.Get (0));
-  qd.Get (0)->TraceConnectWithoutContext ("Mark", MakeCallback(&MarkTraceR1));
+  streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-0.plotme");
+  qd.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
+  streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-0.plotme");
+  qd.Get (0)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
 
   uint16_t port = 50000;
   InstallPacketSink (rightNodes.Get (0), port);      // A Sink 0 Applications
