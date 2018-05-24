@@ -316,7 +316,7 @@ int main (int argc, char *argv[])
   std::string queue_disc_type = "FifoQueueDisc";
   bool useEcn = false;
   uint32_t dataSize = 1446;
-  uint32_t delAckCount = 1;
+  uint32_t delAckCount = 2;
 
   CommandLine cmd;
   cmd.AddValue ("stream", "Seed value for random variable", stream);
