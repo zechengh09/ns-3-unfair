@@ -1,0 +1,30 @@
+set xrange [2:10]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "ProportionalFairshare-A.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Throughput (Mbps)" font "Verdana"
+set key outside;
+set key right top;
+plot "TP-A1.plotme" title "A1" with lines lw 1.5 lc 1,"TP-A2.plotme" title "A2" with lines lw 1.5 lc 2,"TP-A3.plotme" title "A3" with lines lw 1.5 lc 3, 6.7534 title "A1-PF" with lines lw 1.5 dashtype 2 lc 1, 8.1175 title "A2-PF" with lines lw 1.5 dashtype 2 lc 2, 10.2252 title "A3-PF" with lines lw 1.5 dashtype 2 lc 3
+
+
+set output "ProportionalFairshare-B.png"
+plot "TP-B1.plotme" title "B1" with lines lw 1.5 lc 1,"TP-B2.plotme" title "B2" with lines lw 1.5 lc 2,"TP-B3.plotme" title "B3" with lines lw 1.5 lc 3, 3.0588 title "B1-PF" with lines lw 1.5 dashtype 2 lc 1, 3.3108 title "B2-PF" with lines lw 1.5 dashtype 2 lc 2, 4.4906 title "B3-PF" with lines lw 1.5 dashtype 2 lc 3
+
+set output "ProportionalFairshare-C.png"
+plot "TP-C1.plotme" title "C1" with lines lw 1.5,"TP-C2.plotme" title "C2" with lines lw 1.5,"TP-C3.plotme" title "C3" with lines lw 1.5, 38.0145 title "C-PF" with lines lw 1.5 dashtype 2 lc 8
+
+set output "ProportionalFairshare-D.png"
+plot "TP-D1.plotme" title "D1" with lines lw 1.5, 40.1878 title "D-PF" with lines lw 1.5 dashtype 2 lc 8
+
+set output "ProportionalFairshare-E.png"
+plot "TP-E1.plotme" title "E1" with lines lw 1.5,"TP-E2.plotme" title "E2" with lines lw 1.5, 39.3797 title "E-PF" with lines lw 1.5 dashtype 2 lc 8
+
+set output "ProportionalFairshare-F.png"
+plot "TP-F1.plotme" title "F1" with lines lw 1.5, 18.5342 title "F-PF" with lines lw 1.5 dashtype 2  lc 8
+
+set output "ProportionalFairshare-G.png"
+plot "TP-G1.plotme" title "G1" with lines lw 1.5, "TP-G2.plotme" title "G2" with lines lw 1.5, "TP-G3.plotme" title "G3" with lines lw 1.5, "TP-G4.plotme" title "G4" with lines lw 1.5, "TP-G5.plotme" title "G5" with lines lw 1.5, "TP-G6.plotme" title "G6" with lines lw 1.5, "TP-G7.plotme" title "G7" with lines lw 1.5, 5.5914 title "G-PF" with lines lw 1.5 dashtype 2 lc 8
+
+set output "ProportionalFairshare-H.png"
+plot "TP-H1.plotme" title "H1" with lines lw 1.5, "TP-H2.plotme" title "H2" with lines lw 1.5, 57.0218 title "H-PF" with lines lw 1.5 dashtype 2 lc 8
