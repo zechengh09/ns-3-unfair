@@ -350,6 +350,9 @@ int main (int argc, char *argv[])
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (transport_prot)));
     }
 
+  Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 20));
+  Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 20));
+  Config::SetDefault ("ns3::TcpSocket::InitialCwnd", UintegerValue (10));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (delAckCount));
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (dataSize));
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (useEcn));
