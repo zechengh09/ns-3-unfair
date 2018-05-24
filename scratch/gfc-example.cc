@@ -287,6 +287,17 @@ void InstallPacketSink (Ptr<Node> node, uint16_t port)
   sinkApps.Stop (Seconds (stopTime));
 }
 
+static void
+DropAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item)
+{
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " 1" << std::endl;
+}
+
+static void
+MarkAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item, const char* reason)
+{
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " 1" << std::endl;
+}
 
 int main (int argc, char *argv[])
 {
@@ -348,6 +359,8 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::PiQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (250));
   Config::SetDefault ("ns3::PiQueueDisc::MeanPktSize", UintegerValue (1500));
+  Config::SetDefault ("ns3::PiQueueDisc::A", DoubleValue (0.00003029464612));
+  Config::SetDefault ("ns3::PiQueueDisc::B", DoubleValue (0.00003011342192));
   Config::SetDefault ("ns3::RedQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::RedQueueDisc::ARED", BooleanValue (true));
   Config::SetDefault ("ns3::RedQueueDisc::Gentle", BooleanValue (true));
@@ -470,22 +483,29 @@ int main (int argc, char *argv[])
   InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port, 19, 0, MakeCallback (&CwndChangeH1));
   InstallBulkSend (gfc.GetDown (3, 1), gfc.GetUpIpv4Address (4, 0), port + 1, 19, 1, MakeCallback (&CwndChangeH2));
 
-  dir = "results/" + currentTime + "/";
+  dir = "results/gfc-2/" + currentTime + "/";
   std::string dirToSave = "mkdir -p " + dir;
   system (dirToSave.c_str ());
   system ((dirToSave + "/pcap/").c_str ());
   system ((dirToSave + "/cwndTraces/").c_str ());
+  system ((dirToSave + "/queueTraces/").c_str ());
   system (("cp -R PlotScripts/* " + dir + "/pcap/").c_str ());
 
   TrafficControlHelper tch;
   tch.SetRootQueueDisc (queue_disc_type);
 
   QueueDiscContainer qd;
+  AsciiTraceHelper asciiTraceHelper;
+  Ptr<OutputStreamWrapper> streamWrapper;
   uint8_t x = 0;
   for (uint32_t i = 0; i < gfc.GetSwitchCount () - 1; i++)
     {
       tch.Uninstall (gfc.GetSwitch (i)->GetDevice (x));
       qd.Add (tch.Install (gfc.GetSwitch (i)->GetDevice (x)).Get (0));
+      streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-" + std::to_string (i) + ".plotme");
+      qd.Get (i)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
+      streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-" + std::to_string (i) + ".plotme");
+      qd.Get (i)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
       filePlotQueue.push_back (std::stringstream (dir + "/queue-" + std::to_string (i) + ".plotme"));
       remove (filePlotQueue [i].str ().c_str ());
       filePlotPacketSojourn.push_back (std::stringstream (dir + "/delay-" + std::to_string (i) + ".plotme"));
@@ -509,6 +529,20 @@ int main (int argc, char *argv[])
   Config::Set ("/$ns3::NodeListPriv/NodeList/3/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/QueueRef", DoubleValue (94));
   Config::Set ("/$ns3::NodeListPriv/NodeList/4/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/QueueRef", DoubleValue (94));
   Config::Set ("/$ns3::NodeListPriv/NodeList/5/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/QueueRef", DoubleValue (94));
+
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/A", DoubleValue (0.000004532523947));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.000002644158857));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.00001209525872));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/3/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.000001510841316));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/4/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.000001846757553));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/5/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.0000151233375));
+
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/B", DoubleValue (0.000004528686258));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.000002641547096));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.00001206796849));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/3/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.000001509562086));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/4/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.000001844846605));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/5/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.00001508069651));
 
   // 8. Install FlowMonitor on all nodes
   FlowMonitorHelper flowmon;
