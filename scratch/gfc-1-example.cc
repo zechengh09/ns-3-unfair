@@ -355,8 +355,6 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocket::InitialCwnd", UintegerValue (10));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (delAckCount));
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (dataSize));
-  Config::SetDefault ("ns3::FifoQueueDisc::MaxSize", QueueSizeValue (QueueSize ("375p")));
-
 
   std::vector <std::pair <uint32_t, uint32_t> > nodes;
   nodes.push_back (std::make_pair (0,2));
@@ -487,6 +485,12 @@ int main (int argc, char *argv[])
     }
   pointToPointRouter.EnablePcapAll (dir + "/pcap/N", false);
 
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/3/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/4/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/5/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("375p")));
   // 8. Install FlowMonitor on all nodes
   FlowMonitorHelper flowmon;
   Ptr<FlowMonitor> monitor = flowmon.InstallAll ();
