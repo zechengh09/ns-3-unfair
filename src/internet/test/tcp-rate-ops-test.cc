@@ -27,6 +27,7 @@
 #include "tcp-general-test.h"
 #include "ns3/config.h"
 #include "tcp-error-model.h"
+#include "ns3/tcp-tx-buffer.h"
 
 using namespace ns3;
 
@@ -387,6 +388,143 @@ TcpRateLinuxWithSocketsTest::FinalChecks ()
 }
 
 /**
+ * \ingroup internet-tests
+ * \ingroup tests
+ *
+ * \brief The TcpRateLinuxWithBufferTest tests rate sample functionality with arbitary SACK scenario.
+ *        Check the value of delivered against a home-made guess
+ */
+class TcpRateLinuxWithBufferTest : public TestCase
+{
+public:
+  /**
+   * \brief Constructor.
+   * \param segmentSize Segment size to use.
+   * \param desc Description.
+   */
+  TcpRateLinuxWithBufferTest (uint32_t segmentSize, std::string desc);
+
+private:
+  virtual void DoRun (void);
+  virtual void DoTeardown (void);
+
+  /**
+   * \brief Track the rate value of TcpRateLinux.
+   * \param rate updated value of TcpRate.
+   */
+  virtual void RateUpdatedTrace (const TcpRateLinux::TcpRate &rate);
+
+  /**
+   * \brief Track the rate sample value of TcpRateLinux.
+   * \param sample updated value of TcpRateSample.
+   */
+  virtual void RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample);
+
+  /** \brief Test with acks without drop */
+  void TestWithStraightAcks ();
+
+  /** \brief Test with arbitary SACK scenario */
+  void TestWithSackBlocks ();
+
+  uint32_t               m_expectedDelivered {0}; //!< Amount of expected delivered data
+  uint32_t               m_segmentSize;           //!< Segment size
+  TcpTxBuffer            m_txBuf;                 //!< Tcp Tx buffer
+  Ptr<TcpRateOps>        m_rateOps;               //!< Rate operations
+};
+
+TcpRateLinuxWithBufferTest::TcpRateLinuxWithBufferTest (uint32_t segmentSize,
+                                                        std::string testString)
+  : TestCase (testString),
+    m_segmentSize (segmentSize)
+{
+  m_rateOps  = CreateObject <TcpRateLinux> ();
+  m_rateOps->TraceConnectWithoutContext ("TcpRateUpdated",
+                                         MakeCallback (&TcpRateLinuxWithBufferTest::RateUpdatedTrace, this));
+  m_rateOps->TraceConnectWithoutContext ("TcpRateSampleUpdated",
+                                         MakeCallback (&TcpRateLinuxWithBufferTest::RateSampleUpdatedTrace, this));
+}
+
+void
+TcpRateLinuxWithBufferTest::DoRun ()
+{
+  Simulator::Schedule (Seconds (0.0), &TcpRateLinuxWithBufferTest::TestWithSackBlocks, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpRateLinuxWithBufferTest::RateUpdatedTrace (const TcpRateLinux::TcpRate &rate)
+{
+  NS_LOG_DEBUG ("Rate updated " << rate);
+  NS_TEST_ASSERT_MSG_EQ (rate.m_delivered, m_expectedDelivered, "Delivered data is not equal to expected delivered");
+}
+
+void
+TcpRateLinuxWithBufferTest::RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample)
+{
+  NS_LOG_DEBUG ("Rate sample updated " << sample);
+}
+
+void
+TcpRateLinuxWithBufferTest::TestWithSackBlocks ()
+{
+  SequenceNumber32 head (1);
+  m_txBuf.SetHeadSequence (head);
+  SequenceNumber32 ret;
+  Ptr<TcpOptionSack> sack = CreateObject<TcpOptionSack> ();
+  m_txBuf.SetSegmentSize (m_segmentSize);
+  m_txBuf.SetDupAckThresh (3);
+
+  m_txBuf.Add(Create<Packet> (10 * m_segmentSize));
+
+  // Send 10 Segments
+  for (uint8_t i = 0; i < 10; ++i)
+    {
+      bool isStartOfTransmission = m_txBuf.BytesInFlight () == 0;
+      TcpTxItem *outItem = m_txBuf.CopyFromSequence (m_segmentSize, SequenceNumber32((i * m_segmentSize) + 1));
+      m_rateOps->SkbSent (outItem, isStartOfTransmission);
+    }
+
+  // ACK 2 Segments
+  for (uint8_t i = 1; i <= 2; ++i)
+    {
+      uint32_t priorInFlight = m_txBuf.BytesInFlight ();
+      m_expectedDelivered += m_segmentSize;
+      m_txBuf.DiscardUpTo (SequenceNumber32 (m_segmentSize * i + 1), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+      m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
+    }
+
+  sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (m_segmentSize * 4 + 1), SequenceNumber32 (m_segmentSize * 5 + 1)));
+  m_expectedDelivered += m_segmentSize;
+  m_txBuf.Update(sack->GetSackList(), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+
+
+  sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (m_segmentSize * 3 + 1), SequenceNumber32 (m_segmentSize * 4 + 1)));
+  m_expectedDelivered += m_segmentSize;
+  m_txBuf.Update(sack->GetSackList(), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+
+
+  // Actual delivered should be increased by one segment even multiple blocks are acked.
+  m_expectedDelivered += m_segmentSize;
+  m_txBuf.DiscardUpTo (SequenceNumber32 (m_segmentSize * 5 + 1), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+
+  // ACK rest of the segments
+  for (uint8_t i = 6; i <= 10; ++i)
+    {
+      uint32_t priorInFlight = m_txBuf.BytesInFlight ();
+      m_expectedDelivered += m_segmentSize;
+      m_txBuf.DiscardUpTo (SequenceNumber32 (m_segmentSize * i + 1), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+      m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
+    }
+}
+
+void
+TcpRateLinuxWithBufferTest::DoTeardown ()
+{
+}
+
+
+/**
  * \ingroup internet-test
  * \ingroup tests
  *
@@ -408,6 +546,17 @@ public:
 
     AddTestCase (new TcpRateLinuxWithSocketsTest ("Checking Rate sample value with SACK, one drop", true, toDrop),
                  TestCase::QUICK);
+    toDrop.push_back (4001);
+    AddTestCase (new TcpRateLinuxWithSocketsTest ("Checking Rate sample value without SACK, two drop", false, toDrop),
+                 TestCase::QUICK);
+
+    AddTestCase (new TcpRateLinuxWithSocketsTest ("Checking Rate sample value with SACK, two drop", true, toDrop),
+                 TestCase::QUICK);
+
+    AddTestCase (new TcpRateLinuxWithBufferTest (1000, "Checking rate sample values with arbitary SACK Block"), TestCase::QUICK);
+
+    AddTestCase (new TcpRateLinuxWithBufferTest (500, "Checking rate sample values with arbitary SACK Block"), TestCase::QUICK);
+
   }
 };
 
