@@ -85,3 +85,9 @@ gnuplot gnuplotscriptQ
 
 cd cwndTraces
 gnuplot gnuplotscriptCwnd
+
+cd ..
+mkdir Graphs
+cp pcap/*/*.png Graphs
+cp queueSize.png Graphs
+cp cwndTraces/*.png Graphs
