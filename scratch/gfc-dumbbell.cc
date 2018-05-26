@@ -274,10 +274,11 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::MeanPktSize", UintegerValue (1500));
-  Config::SetDefault ("ns3::PiQueueDisc::A", DoubleValue (0.00003029464612));
-  Config::SetDefault ("ns3::PiQueueDisc::B", DoubleValue (0.00003011342192));
-  Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (94));
-  Config::SetDefault (queue_disc_type + "::MaxSize", QueueSizeValue (QueueSize ("375p")));
+  Config::SetDefault ("ns3::PiQueueDisc::A", DoubleValue (0.002013602268));
+  Config::SetDefault ("ns3::PiQueueDisc::B", DoubleValue (0.001342401512));
+  Config::SetDefault ("ns3::PiQueueDisc::W", DoubleValue (400));
+  Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (10));
+  Config::SetDefault (queue_disc_type + "::MaxSize", QueueSizeValue (QueueSize ("38p")));
 
   AsciiTraceHelper asciiTraceHelper;
   Ptr<OutputStreamWrapper> streamWrapper;
