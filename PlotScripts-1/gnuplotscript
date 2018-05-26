@@ -2,6 +2,7 @@ set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
 set output "TP-Flow.png"
 set xlabel "Time (sec)"
 set ylabel "Throughput (Mbps)"
+set xrange [2:10]
 set key outside;
 set key right top;
 plot "TP-A.plotme" title "A" with lines lw 1.5,"TP-B.plotme" title "B" with lines lw 1.5,"TP-C.plotme" title "C" with lines lw 1.5,"TP-D.plotme" title "D" with lines lw 1.5,"TP-E.plotme" title "E" with lines lw 1.5,"TP-F.plotme" title "F" with lines lw 1.5
@@ -12,4 +13,4 @@ set xlabel "Time (sec)"
 set ylabel "Throughput (%)"
 set key outside;
 set key right top;
-plot "TP-A.plotme" using ($1):($2/.50) title "A" with lines lw 1.5,"TP-B.plotme" using ($1):($2/1.0) title "B" with lines lw 1.5,"TP-C.plotme" using ($1):($2/1.0) title "C" with lines lw 1.5,"TP-D.plotme" using ($1):($2/.50) title "D" with lines lw 1.5,"TP-E.plotme" using ($1):($2/1.00) title "E" with lines lw 1.5,"TP-F.plotme" using ($1):($2/1.50) title "F" with lines lw 1.5
+plot "TP-A.plotme" using ($1):($2/.50) title "A" with lines lw 1.5,"TP-B.plotme" using ($1):($2/1.0) title "B" with lines lw 1.5,"TP-C.plotme" using ($1):($2/1.5) title "C" with lines lw 1.5,"TP-D.plotme" using ($1):($2/.50) title "D" with lines lw 1.5,"TP-E.plotme" using ($1):($2/1.00) title "E" with lines lw 1.5,"TP-F.plotme" using ($1):($2/1.50) title "F" with lines lw 1.5
