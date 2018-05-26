@@ -295,6 +295,17 @@ void InstallPacketSink (Ptr<Node> node, uint16_t port)
   sinkApps.Stop (Seconds (stopTime));
 }
 
+static void
+DropAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item)
+{
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " 1" << std::endl;
+}
+
+static void
+MarkAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item, const char* reason)
+{
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " 1" << std::endl;
+}
 
 int main (int argc, char *argv[])
 {
@@ -464,17 +475,24 @@ int main (int argc, char *argv[])
   system (dirToSave.c_str ());
   system ((dirToSave + "/pcap/").c_str ());
   system ((dirToSave + "/cwndTraces/").c_str ());
+  system ((dirToSave + "/queueTraces/").c_str ());
   system (("cp -R PlotScripts-1/* " + dir + "/pcap/").c_str ());
 
   TrafficControlHelper tch;
   tch.SetRootQueueDisc (queue_disc_type);
 
   QueueDiscContainer qd;
+  AsciiTraceHelper asciiTraceHelper;
+  Ptr<OutputStreamWrapper> streamWrapper;
   uint8_t x = 0;
   for (uint32_t i = 0; i < gfc.GetSwitchCount () - 1; i++)
     {
       tch.Uninstall (gfc.GetSwitch (i)->GetDevice (x));
       qd.Add (tch.Install (gfc.GetSwitch (i)->GetDevice (x)).Get (0));
+      streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-" + std::to_string (i) + ".plotme");
+      qd.Get (i)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
+      streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-" + std::to_string (i) + ".plotme");
+      qd.Get (i)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
       filePlotQueue.push_back (std::stringstream (dir + "/queue-" + std::to_string (i) + ".plotme"));
       remove (filePlotQueue [i].str ().c_str ());
       filePlotPacketSojourn.push_back (std::stringstream (dir + "/delay-" + std::to_string (i) + ".plotme"));
@@ -489,8 +507,7 @@ int main (int argc, char *argv[])
   Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("38p")));
   Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("38p")));
   Config::Set ("/$ns3::NodeListPriv/NodeList/3/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("38p")));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/4/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("38p")));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/5/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("38p")));
+
   // 8. Install FlowMonitor on all nodes
   FlowMonitorHelper flowmon;
   Ptr<FlowMonitor> monitor = flowmon.InstallAll ();

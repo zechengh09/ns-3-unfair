@@ -80,6 +80,29 @@ cd ..
 cp gnuplotscriptQ ../
 cp gnuplotscriptCwnd ../cwndTraces/
 
+cd ../queueTraces/
+echo "Queue 1" > QueueStatsAfter2sec.txt
+drops=`awk '{if ($1 >= 2) print $0}' drop-0.plotme | wc -l`
+marks=`awk '{if ($1 >= 2) print $0}' mark-0.plotme | wc -l`
+echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfter2sec.txt
+
+echo "Queue 2" >> QueueStatsAfter2sec.txt
+drops=`awk '{if ($1 >= 2) print $0}' drop-1.plotme | wc -l`
+marks=`awk '{if ($1 >= 2) print $0}' mark-1.plotme | wc -l`
+echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfter2sec.txt
+
+echo "Queue 3" >> QueueStatsAfter2sec.txt
+drops=`awk '{if ($1 >= 2) print $0}' drop-2.plotme | wc -l`
+marks=`awk '{if ($1 >= 2) print $0}' mark-2.plotme | wc -l`
+echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfter2sec.txt
+
+echo "Queue 4" >> QueueStatsAfter2sec.txt
+drops=`awk '{if ($1 >= 2) print $0}' drop-3.plotme | wc -l`
+marks=`awk '{if ($1 >= 2) print $0}' mark-3.plotme | wc -l`
+echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfter2sec.txt
+
+cp QueueStatsAfter2sec.txt ../Graphs/
+
 cd ..
 gnuplot gnuplotscriptQ
 
