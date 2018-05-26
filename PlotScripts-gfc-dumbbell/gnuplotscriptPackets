@@ -1,6 +1,6 @@
 set xrange [2:10]
 set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
-set output "TP.png"
+set output "TP-Flow-Packets.png"
 set xlabel "Time (sec)"
 set ylabel "Throughput (Packets/sec)"
 set key outside;

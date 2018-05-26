@@ -32,17 +32,22 @@ gnuplot gnuplotscriptRoutersPackets
 cd ..
 
 mkdir -p ../Graphs
-cp plotmeRouterTP/TP.png ../Graphs/TP-Router.png
-cp plotmeRouterTP/TPPercent.png ../Graphs/TP-Router-Percent.png
-cp plotmeRouterTPP/TP.png ../Graphs/TP-Router-Packets.png
-cp plotmeTP/TP.png ../Graphs/TP-Flow.png
-cp plotmeTP/TPPercent.png ../Graphs/TP-Flow-Percent.png
-cp plotmeTPP/TP.png ../Graphs/TP-Flow-Packets.png
+cp plotmeRouterTP/*.png ../Graphs/
+cp plotmeRouterTPP/*.png ../Graphs/
+cp plotmeTP/*.png ../Graphs/
+cp plotmeTPP/*.png ../Graphs/
 cp overallTP.txt ../Graphs/
 
 #Cwnd plot
 cp gnuplotscriptQ ../
 cp gnuplotscriptCwnd ../cwndTraces/
+
+cd ../queueTraces/
+echo "Queue 1" > QueueStatsAfter2sec.txt
+drops=`awk '{if ($1 >= 2) print $0}' drop-0.plotme | wc -l`
+marks=`awk '{if ($1 >= 2) print $0}' mark-0.plotme | wc -l`
+echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfter2sec.txt
+cp QueueStatsAfter2sec.txt ../Graphs/
 
 cd ..
 gnuplot gnuplotscriptQ
