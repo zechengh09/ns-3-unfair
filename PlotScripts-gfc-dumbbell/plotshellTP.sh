@@ -8,8 +8,10 @@ python tp-new.py --startTime=2 --destIp 10.0.9.2 N-10-0.pcap plotmeTP/TP-D.plotm
 python tp-new.py --startTime=2 --destIp 10.0.10.2 N-11-0.pcap plotmeTP/TP-E.plotme plotmeTPP/TP-E.plotme E | tee -a overallTP.txt
 
 cp gnuplotscript plotmeTP
+cp perflowgnuplot plotmeTP
 cd plotmeTP
 gnuplot gnuplotscript
+gnuplot perflowgnuplot
 cd ..
 
 cp gnuplotscriptPackets plotmeTPP
