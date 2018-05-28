@@ -1,82 +1,50 @@
-#Mbps
-mkdir plotmeTP
-printf "Flow Throughput (Mbps)\n"
-python calculateTP_A.py N-12-0.pcap
-python calculateTP_B.py N-16-0.pcap
-python calculateTP_C.py N-13-0.pcap
-python calculateTP_D.py N-7-0.pcap
-python calculateTP_E.py N-15-0.pcap
-python calculateTP_F.py N-10-0.pcap
+#Usage startTime
+printf "Flow Throughput\n\n" | tee -a overallTP.txt
+
+python tp-new.py --startTime=2 --destIp 10.0.11.2 N-12-0.pcap plotmeTP/TP-A.plotme plotmeTPP/TP-A.plotme A | tee -a overallTP.txt
+python tp-new.py --startTime=2 --destIp 10.0.15.2 N-16-0.pcap plotmeTP/TP-B.plotme plotmeTPP/TP-B.plotme B | tee -a overallTP.txt
+python tp-new.py --startTime=2 --destIp 10.0.12.2 N-13-0.pcap plotmeTP/TP-C.plotme plotmeTPP/TP-C.plotme C | tee -a overallTP.txt
+python tp-new.py --startTime=2 --destIp 10.0.6.2 N-7-0.pcap plotmeTP/TP-D.plotme plotmeTPP/TP-D.plotme D | tee -a overallTP.txt
+python tp-new.py --startTime=2 --destIp 10.0.14.2 N-15-0.pcap plotmeTP/TP-E.plotme plotmeTPP/TP-E.plotme E | tee -a overallTP.txt
+python tp-new.py --startTime=2 --destIp 10.0.9.2 N-10-0.pcap plotmeTP/TP-F.plotme plotmeTPP/TP-F.plotme F | tee -a overallTP.txt
 
 cp gnuplotscript plotmeTP
 cd plotmeTP
 gnuplot gnuplotscript
 cd ..
 
-mkdir plotmeRouterTP
-printf "\nRouter Throughput (Mbps)\n"
-printf "R1 "
-python calculateTP_R.py N-0-0.pcap
-mv plotmeRouterTP/TP.plotme plotmeRouterTP/TP-R1.plotme
+cp gnuplotscriptPackets plotmeTPP
+cd plotmeTPP
+gnuplot gnuplotscriptPackets
+cd ..
 
-printf "R2 "
-python calculateTP_R.py N-1-1.pcap
-mv plotmeRouterTP/TP.plotme plotmeRouterTP/TP-R2.plotme
+printf "\nRouter Throughput\n\n" | tee -a overallTP.txt
 
-printf "R3 "
-python calculateTP_R.py N-2-1.pcap
-mv plotmeRouterTP/TP.plotme plotmeRouterTP/TP-R3.plotme
-
-printf "R4 "
-python calculateTP_R.py N-3-1.pcap
-mv plotmeRouterTP/TP.plotme plotmeRouterTP/TP-R4.plotme
-
+python tp-new.py --startTime=2 N-0-0.pcap plotmeRouterTP/TP-R1.plotme plotmeRouterTPP/TP-R1.plotme R1 | tee -a overallTP.txt
+python tp-new.py --startTime=2 N-1-1.pcap plotmeRouterTP/TP-R2.plotme plotmeRouterTPP/TP-R2.plotme R2 | tee -a overallTP.txt
+python tp-new.py --startTime=2 N-2-1.pcap plotmeRouterTP/TP-R3.plotme plotmeRouterTPP/TP-R3.plotme R3 | tee -a overallTP.txt
+python tp-new.py --startTime=2 N-3-1.pcap plotmeRouterTP/TP-R4.plotme plotmeRouterTPP/TP-R4.plotme R4 | tee -a overallTP.txt
 
 cp gnuplotscriptRouters plotmeRouterTP
 cd plotmeRouterTP
 gnuplot gnuplotscriptRouters
 cd ..
 
-mkdir plotmeTPP
-printf "\n\nFlow Throughput (Packets/s)\n"
-python calculateTPP_A.py N-12-0.pcap
-python calculateTPP_B.py N-16-0.pcap
-python calculateTPP_C.py N-13-0.pcap
-python calculateTPP_D.py N-7-0.pcap
-python calculateTPP_E.py N-15-0.pcap
-python calculateTPP_F.py N-10-0.pcap
-
-
-cp gnuplotscriptPackets plotmeTPP
-cd plotmeTPP
-gnuplot gnuplotscriptPackets
-cd ..
-
-#PACKETS/sec
-mkdir plotmeRouterTPP
-printf "\n\nRouter Throughput (Packets/s)\n"
-printf "R1 "
-python calculateTPP_R.py N-0-0.pcap
-mv plotmeRouterTPP/TP.plotme plotmeRouterTPP/TP-R1.plotme
-
-printf "R2 "
-python calculateTPP_R.py N-1-1.pcap
-mv plotmeRouterTPP/TP.plotme plotmeRouterTPP/TP-R2.plotme
-
-printf "R3 "
-python calculateTPP_R.py N-2-1.pcap
-mv plotmeRouterTPP/TP.plotme plotmeRouterTPP/TP-R3.plotme
-
-printf "R4 "
-python calculateTPP_R.py N-3-1.pcap
-mv plotmeRouterTPP/TP.plotme plotmeRouterTPP/TP-R4.plotme
-
 cp gnuplotscriptRoutersPackets plotmeRouterTPP
 cd plotmeRouterTPP
 gnuplot gnuplotscriptRoutersPackets
+cd ..
+
+mkdir -p ../Graphs
+cp plotmeRouterTP/TP-Router.png ../Graphs/TP-Router.png
+cp plotmeRouterTP/TP-Router-Percent.png ../Graphs/TP-Router-Percent.png
+cp plotmeRouterTPP/TP-Router-Packets.png ../Graphs/TP-Router-Packets.png
+cp plotmeTP/TP-Flow.png ../Graphs/TP-Flow.png
+cp plotmeTP/TP-Flow-Percent.png ../Graphs/TP-Flow-Percent.png
+cp plotmeTPP/TP-Flow-Packets.png ../Graphs/TP-Flow-Packets.png
+cp overallTP.txt ../Graphs/
 
 #Cwnd plot
-cd ..
 cp gnuplotscriptQ ../
 cp gnuplotscriptCwnd ../cwndTraces/
 
@@ -105,12 +73,9 @@ cp QueueStatsAfter2sec.txt ../Graphs/
 
 cd ..
 gnuplot gnuplotscriptQ
+cp queueSize.png Graphs/
+cp queueStats.txt Graphs/
 
 cd cwndTraces
 gnuplot gnuplotscriptCwnd
-
-cd ..
-mkdir Graphs
-cp pcap/*/*.png Graphs
-cp queueSize.png Graphs
-cp cwndTraces/*.png Graphs
+cp Cwnd*.png ../Graphs/
