@@ -427,6 +427,7 @@ private:
   void TestWithSackBlocks ();
 
   uint32_t               m_expectedDelivered {0}; //!< Amount of expected delivered data
+  uint32_t               m_expectedAckedSacked {0}; //!< Amount of expected acked sacked data
   uint32_t               m_segmentSize;           //!< Segment size
   TcpTxBuffer            m_txBuf;                 //!< Tcp Tx buffer
   Ptr<TcpRateOps>        m_rateOps;               //!< Rate operations
@@ -463,6 +464,7 @@ void
 TcpRateLinuxWithBufferTest::RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample)
 {
   NS_LOG_DEBUG ("Rate sample updated " << sample);
+  NS_TEST_ASSERT_MSG_EQ (sample.m_ackedSacked, m_expectedAckedSacked, "AckedSacked bytes is not equal to expected AckedSacked bytes");
 }
 
 void
@@ -485,37 +487,46 @@ TcpRateLinuxWithBufferTest::TestWithSackBlocks ()
       m_rateOps->SkbSent (outItem, isStartOfTransmission);
     }
 
+  uint32_t priorInFlight = m_txBuf.BytesInFlight ();
   // ACK 2 Segments
   for (uint8_t i = 1; i <= 2; ++i)
     {
-      uint32_t priorInFlight = m_txBuf.BytesInFlight ();
+      priorInFlight = m_txBuf.BytesInFlight ();
       m_expectedDelivered += m_segmentSize;
       m_txBuf.DiscardUpTo (SequenceNumber32 (m_segmentSize * i + 1), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+      m_expectedAckedSacked = m_segmentSize;
       m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
     }
 
+  priorInFlight = m_txBuf.BytesInFlight ();
   sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (m_segmentSize * 4 + 1), SequenceNumber32 (m_segmentSize * 5 + 1)));
   m_expectedDelivered += m_segmentSize;
   m_txBuf.Update(sack->GetSackList(), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+  m_expectedAckedSacked = m_segmentSize;
+  m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
 
-
+  priorInFlight = m_txBuf.BytesInFlight ();
   sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (m_segmentSize * 3 + 1), SequenceNumber32 (m_segmentSize * 4 + 1)));
   m_expectedDelivered += m_segmentSize;
   m_txBuf.Update(sack->GetSackList(), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+  m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
 
-
+  priorInFlight = m_txBuf.BytesInFlight ();
   // Actual delivered should be increased by one segment even multiple blocks are acked.
   m_expectedDelivered += m_segmentSize;
   m_txBuf.DiscardUpTo (SequenceNumber32 (m_segmentSize * 5 + 1), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
+  m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
 
+
+  priorInFlight = m_txBuf.BytesInFlight ();
   // ACK rest of the segments
   for (uint8_t i = 6; i <= 10; ++i)
     {
-      uint32_t priorInFlight = m_txBuf.BytesInFlight ();
       m_expectedDelivered += m_segmentSize;
       m_txBuf.DiscardUpTo (SequenceNumber32 (m_segmentSize * i + 1), MakeCallback (&TcpRateOps::SkbDelivered, m_rateOps));
-      m_rateOps->SampleGen (m_segmentSize, 0, false, priorInFlight, Seconds (0));
     }
+  m_expectedAckedSacked = 5 * m_segmentSize;
+  TcpRateOps::TcpRateSample rateSample = m_rateOps->SampleGen (5 * m_segmentSize, 0, false, priorInFlight, Seconds (0));
 }
 
 void
