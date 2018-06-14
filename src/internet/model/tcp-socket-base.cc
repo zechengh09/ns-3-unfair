@@ -807,7 +807,8 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
         }
 
       m_rateOps->CalculateAppLimited(m_tcb->m_cWnd, m_tcb->m_bytesInFlight, m_tcb->m_segmentSize,
-                                     m_txBuffer->TailSequence (), m_tcb->m_nextTxSequence);
+                                     m_txBuffer->TailSequence (), m_tcb->m_nextTxSequence,
+                                     m_txBuffer->GetLost (), m_txBuffer->GetRetransmitsCount ());
 
       // Submit the data to lower layers
       NS_LOG_LOGIC ("txBufSize=" << m_txBuffer->Size () << " state " << TcpStateName[m_state]);

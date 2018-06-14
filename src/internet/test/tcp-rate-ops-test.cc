@@ -45,7 +45,8 @@ class TcpRateLinuxBasicTest : public TestCase
 {
 public:
   TcpRateLinuxBasicTest (uint32_t cWnd, SequenceNumber32 tailSeq, SequenceNumber32 nextTx,
-                    uint32_t testCase, std::string testName);
+                         uint32_t lostOut, uint32_t retransOut, uint32_t testCase,
+                         std::string testName);
 
 private:
   virtual void DoRun (void);
@@ -61,13 +62,15 @@ private:
   Time                      m_deliveredTime;
   SequenceNumber32          m_tailSeq;
   SequenceNumber32          m_nextTx;
+  uint32_t                  m_lostOut;
+  uint32_t                  m_retransOut;
   uint32_t                  m_testCase;
   std::vector <TcpTxItem *> m_skbs;
 };
 
 TcpRateLinuxBasicTest::TcpRateLinuxBasicTest (uint32_t cWnd, SequenceNumber32 tailSeq,
-                                    SequenceNumber32 nextTx, uint32_t testCase,
-                                    std::string testName)
+                                    SequenceNumber32 nextTx, uint32_t lostOut,
+                                    uint32_t retransOut, uint32_t testCase, std::string testName)
   : TestCase (testName),
     m_cWnd (cWnd),
     m_inFlight (0),
@@ -76,6 +79,8 @@ TcpRateLinuxBasicTest::TcpRateLinuxBasicTest (uint32_t cWnd, SequenceNumber32 ta
     m_deliveredTime (Seconds (0)),
     m_tailSeq (tailSeq),
     m_nextTx (nextTx),
+    m_lostOut (lostOut),
+    m_retransOut (retransOut),
     m_testCase (testCase)
 {
 }
@@ -107,7 +112,7 @@ void
 TcpRateLinuxBasicTest::SendSkb (TcpTxItem * skb)
 {
   bool isStartOfTransmission = m_inFlight == 0;
-  m_rateOps.CalculateAppLimited (m_cWnd, m_inFlight, m_segmentSize, m_tailSeq, m_nextTx);
+  m_rateOps.CalculateAppLimited (m_cWnd, m_inFlight, m_segmentSize, m_tailSeq, m_nextTx, 0, 0);
   m_rateOps.SkbSent (skb, isStartOfTransmission);
   m_inFlight += skb->GetSeqSize ();
 
@@ -547,8 +552,8 @@ public:
   TcpRateOpsTestSuite ()
     : TestSuite ("tcp-rate-ops", UNIT)
   {
-    AddTestCase (new TcpRateLinuxBasicTest (1000, SequenceNumber32 (20), SequenceNumber32 (11), 1, "Testing SkbDelivered and SkbSent"), TestCase::QUICK);
-    AddTestCase (new TcpRateLinuxBasicTest (1000, SequenceNumber32 (11), SequenceNumber32 (11), 2, "Testing SkbDelivered and SkbSent with app limited data"), TestCase::QUICK);
+    AddTestCase (new TcpRateLinuxBasicTest (1000, SequenceNumber32 (20), SequenceNumber32 (11), 1, 0, 0, "Testing SkbDelivered and SkbSent"), TestCase::QUICK);
+    AddTestCase (new TcpRateLinuxBasicTest (1000, SequenceNumber32 (11), SequenceNumber32 (11), 2, 0, 0, "Testing SkbDelivered and SkbSent with app limited data"), TestCase::QUICK);
 
     std::vector<uint32_t> toDrop;
     toDrop.push_back (4001);

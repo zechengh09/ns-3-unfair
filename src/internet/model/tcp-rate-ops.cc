@@ -136,17 +136,17 @@ TcpRateLinux::SampleGen(uint32_t delivered, uint32_t lost, bool is_sack_reneg,
 void
 TcpRateLinux::CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
                                    uint32_t segmentSize, const SequenceNumber32 &tailSeq,
-                                   const SequenceNumber32 &nextTx)
+                                   const SequenceNumber32 &nextTx, const uint32_t lostOut,
+                                   const uint32_t retransOut)
 {
   NS_LOG_FUNCTION (this);
 
   /* Missing checks from Linux:
    * - Nothing in sending host's qdisc queues or NIC tx queue. NOT IMPLEMENTED
-   * - All lost packets have been retransmitted
-   * (for the above: m_txBuffer->GetLost () <= m_txBuffer->GetRetransmitsCount ())
    */
   if (tailSeq - nextTx < static_cast<int32_t> (segmentSize) && // We have less than one packet to send.
-      in_flight < cWnd)                                        // We are not limited by CWND.
+      in_flight < cWnd &&                                      // We are not limited by CWND.
+      lostOut <= retransOut)                                   // All lost packets have been retransmitted.
     {
       m_rate.m_appLimited = std::max (m_rate.m_delivered + in_flight, 1UL);
       m_rateTrace (m_rate);

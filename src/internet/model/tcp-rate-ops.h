@@ -76,10 +76,13 @@ public:
    * \param segmentSize Segment size
    * \param tailSeq Tail Sequence
    * \param nextTx NextTx
+   * \param lostOut Number of lost bytes
+   * \param retransOut Number of retransmitted bytes
    */
   virtual void CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
                                     uint32_t segmentSize, const SequenceNumber32 &tailSeq,
-                                    const SequenceNumber32 &nextTx) = 0;
+                                    const SequenceNumber32 &nextTx, const uint32_t lostOut,
+                                    const uint32_t retransOut) = 0;
 
   /**
    *
@@ -149,7 +152,8 @@ public:
   virtual void SkbDelivered (TcpTxItem * skb) override;
   virtual void CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
                                   uint32_t segmentSize, const SequenceNumber32 &tailSeq,
-                                  const SequenceNumber32 &nextTx) override;
+                                  const SequenceNumber32 &nextTx, const uint32_t lostOut,
+                                  const uint32_t retransOut) override;
   virtual const TcpRateSample & SampleGen (uint32_t delivered, uint32_t lost,
                                            bool is_sack_reneg, uint32_t priorInFlight,
                                            const Time &minRtt) override;
