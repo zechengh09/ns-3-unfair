@@ -1,0 +1,48 @@
+set xrange [2:10]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-T1.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (Mbps)"
+set key outside;
+set key right top;
+plot "TP-T1.plotme" title "T1" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-T1-Percent.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (%)"
+set key outside;
+set key right top;
+plot "TP-T1.plotme" using ($1):($2/0.1) title "T1" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-Scorp.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (Mbps)"
+set key outside;
+set key right top;
+plot "TP-Scorp.plotme" title "Scorpion" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-Scorp-Percent.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (%)"
+set key outside;
+set key right top;
+plot "TP-Scorp.plotme" using ($1):($2/0.1) title "Scorpion" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-T2.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (Mbps)"
+set key outside;
+set key right top;
+plot "TP-T2.plotme" title "T2" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-T2-Percent.png"
+set xlabel "Time (sec)"
+set ylabel "Link Utilization (%)"
+set key outside;
+set key right top;
+plot "TP-T2.plotme" using ($1):($2/0.01) title "T2" with lines lw 1.5

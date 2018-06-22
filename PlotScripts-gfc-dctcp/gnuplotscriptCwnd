@@ -1,0 +1,360 @@
+set xrange [2:10]
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS10.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S10.plotme" title "S10" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS11.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S11.plotme" title "S11" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS12.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S12.plotme" title "S12" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS13.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S13.plotme" title "S13" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS14.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S14.plotme" title "S14" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS15.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S15.plotme" title "S15" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS16.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S16.plotme" title "S16" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS17.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S17.plotme" title "S17" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS18.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S18.plotme" title "S18" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS19.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S19.plotme" title "S19" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS20.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S20.plotme" title "S20" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS21.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S21.plotme" title "S21" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS22.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S22.plotme" title "S22" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS23.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S23.plotme" title "S23" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS24.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S24.plotme" title "S24" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS25.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S25.plotme" title "S25" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS26.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S26.plotme" title "S26" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS27.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S27.plotme" title "S27" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS28.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S28.plotme" title "S28" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS29.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S29.plotme" title "S29" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS210.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S210.plotme" title "S210" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS211.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S211.plotme" title "S211" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS212.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S212.plotme" title "S212" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS213.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S213.plotme" title "S213" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS214.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S214.plotme" title "S214" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS215.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S215.plotme" title "S215" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS216.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S216.plotme" title "S216" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS217.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S217.plotme" title "S217" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS218.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S218.plotme" title "S218" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS219.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S219.plotme" title "S219" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS30.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S30.plotme" title "S30" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS31.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S31.plotme" title "S31" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS32.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S32.plotme" title "S32" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS33.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S33.plotme" title "S33" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS34.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S34.plotme" title "S34" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS35.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S35.plotme" title "S35" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS36.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S36.plotme" title "S36" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS37.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S37.plotme" title "S37" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS38.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S38.plotme" title "S38" with lines lw 1.5
+
+set yrange [0:100]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "CwndS39.png"
+set xlabel "Time (sec)" font "Verdana"
+set ylabel "Cwnd (Packets)" font "Verdana"
+set key outside;
+set key right top;
+plot "S39.plotme" title "S39" with lines lw 1.5

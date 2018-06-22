@@ -1,0 +1,24 @@
+set xrange [2:10]
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-T1-Packets.png"
+set xlabel "Time (sec)"
+set ylabel "Throughput (Packets/sec)"
+set key outside;
+set key right top;
+plot "TP-T1.plotme" title "T1" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-Scorp-Packets.png"
+set xlabel "Time (sec)"
+set ylabel "Throughput (Packets/sec)"
+set key outside;
+set key right top;
+plot "TP-Scorp.plotme" title "Scorpion" with lines lw 1.5
+
+set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
+set output "TP-T2-Packets.png"
+set xlabel "Time (sec)"
+set ylabel "Throughput (Packets/sec)"
+set key outside;
+set key right top;
+plot "TP-T2.plotme" title "Scorpion" with lines lw 1.5
