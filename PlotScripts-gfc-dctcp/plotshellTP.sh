@@ -50,6 +50,7 @@ cp gnuplotscript plotmeTP
 cp perflowgnuplot plotmeTP
 cd plotmeTP
 gnuplot gnuplotscript
+gnuplot perflowgnuplot
 cd ..
 
 cp gnuplotscriptPackets plotmeTPP
