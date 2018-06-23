@@ -1,7 +1,7 @@
 set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
 set output "TP-Flow.png"
 set xlabel "Time (sec)"
-set ylabel "Throughput (Mbps)"
+set ylabel "Throughput (Gbps)"
 set xrange [2:10]
 set key outside;
 set key right top;

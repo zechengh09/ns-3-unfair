@@ -4,7 +4,7 @@ set ytics 10
 set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
 set output "ProportionalFairshare-S1-0.png"
 set xlabel "Time (sec)" font "Verdana"
-set ylabel "Throughput (Mbps)" font "Verdana"
+set ylabel "Throughput (Gbps)" font "Verdana"
 set key outside;
 set key right top;
 plot "TP-S10.plotme" title "S1-0" with lines lw 1.5, 47.383 title "S1-0-PF" with lines lw 1.5 dashtype 2 lc 8

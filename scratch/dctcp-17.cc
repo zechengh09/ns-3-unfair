@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Vivek Jain <jain.vivek.anand@gmail.com>
+ * Authors: Shikha Bakshi <shikhabakshi912@gmail.com>
  *          Mohit P. Tahiliani <tahiliani@nitk.edu.in>
  */
 
@@ -503,16 +503,16 @@ int main (int argc, char *argv[])
 
 
   PointToPointHelper pointToPointSR;
-  pointToPointSR.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
-  pointToPointSR.SetChannelAttribute ("Delay", StringValue ("0.01ms"));
+  pointToPointSR.SetDeviceAttribute ("DataRate", StringValue ("1000Mbps"));
+  pointToPointSR.SetChannelAttribute ("Delay", StringValue ("0.05ms"));
 
   PointToPointHelper pointToPointT;
-  pointToPointT.SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  pointToPointT.SetChannelAttribute ("Delay", StringValue ("0.01ms"));
+  pointToPointT.SetDeviceAttribute ("DataRate", StringValue ("10000Mbps"));
+  pointToPointT.SetChannelAttribute ("Delay", StringValue ("0.05ms"));
 
   PointToPointHelper pointToPointT1;
-  pointToPointT1.SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  pointToPointT1.SetChannelAttribute ("Delay", StringValue ("0.01ms"));
+  pointToPointT1.SetDeviceAttribute ("DataRate", StringValue ("10000Mbps"));
+  pointToPointT1.SetChannelAttribute ("Delay", StringValue ("0.05ms"));
 
   NetDeviceContainer T1ScorpDev, T2ScorpDev, S1T1Dev, S2T1Dev, S3T2Dev, R1T2Dev, R2T2Dev;
   T1ScorpDev = pointToPointT.Install (T.Get (0), Scorp.Get (0));
@@ -621,11 +621,11 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::UseEcn", BooleanValue (useEcn));
   Config::SetDefault ("ns3::PiQueueDisc::MeanPktSize", UintegerValue (1500));
-  Config::SetDefault ("ns3::PiQueueDisc::A", DoubleValue (0.002013602268));
-  Config::SetDefault ("ns3::PiQueueDisc::B", DoubleValue (0.001342401512));
-  Config::SetDefault ("ns3::PiQueueDisc::W", DoubleValue (400));
-  Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (10));
-  Config::SetDefault (queue_disc_type + "::MaxSize", QueueSizeValue (QueueSize ("38p")));
+  Config::SetDefault ("ns3::PiQueueDisc::A", DoubleValue ( 0.00007477268187));
+  Config::SetDefault ("ns3::PiQueueDisc::B", DoubleValue ( 0.00006680872759));
+  Config::SetDefault ("ns3::PiQueueDisc::W", DoubleValue (4000));
+  Config::SetDefault ("ns3::PiQueueDisc::QueueRef", DoubleValue (166));
+  Config::SetDefault (queue_disc_type + "::MaxSize", QueueSizeValue (QueueSize ("666p")));
 
   AsciiTraceHelper asciiTraceHelper;
   Ptr<OutputStreamWrapper> streamWrapper;
@@ -634,8 +634,6 @@ int main (int argc, char *argv[])
   tch.SetRootQueueDisc (queue_disc_type);
 
   QueueDiscContainer qd, qd1;
-/*  tch.Uninstall (T.Get (0)->GetDevice (0));
-  qd.Add (tch.Install (T.Get (0)->GetDevice (0)).Get (0));*/
   tch.Uninstall (T1ScorpDev);
   qd = tch.Install (T1ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize, qd.Get (0));
@@ -644,8 +642,6 @@ int main (int argc, char *argv[])
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-0.plotme");
   qd.Get (0)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
 
-/*  tch.Uninstall (T.Get (1)->GetDevice (1));
-  qd1.Add (tch.Install (T.Get (1)->GetDevice (1)).Get (0));*/
   tch.Uninstall (T2ScorpDev);
   qd1 = tch.Install (T2ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize1, qd1.Get (0));
@@ -660,6 +656,25 @@ int main (int argc, char *argv[])
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-2.plotme");
   qd1.Get (1)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
 
+Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
+
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/QueueRef", DoubleValue (166));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/QueueRef", DoubleValue (166));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/QueueRef", DoubleValue (166));
+
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/A", DoubleValue ( 0.00007477268187));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/A", DoubleValue (0.007460151193));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.00007477268187));
+
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/B", DoubleValue (0.00006680872759));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/B", DoubleValue (0.003907698244));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.00006680872759));
+
+  Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/W", DoubleValue (4000));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/W", DoubleValue (4000));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/W", DoubleValue (4000));
 
   uint16_t port = 50000;
   //Install Sink applications on R1
