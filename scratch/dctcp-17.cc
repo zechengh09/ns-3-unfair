@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Shikha Bakshi <shikhabakshi912@gmail.com>
+ * Authors: Vivek Jain <jain.vivek.anand@gmail.com>
  *          Mohit P. Tahiliani <tahiliani@nitk.edu.in>
  */
 
@@ -743,10 +743,12 @@ Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLaye
   std::ofstream myfile;
   myfile.open (dir + "queueStats.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   myfile << std::endl;
-  myfile << "Stat for Queue 1";
+  myfile << "Stat for Queue 0";
   myfile << qd.Get (0)->GetStats ();
-  myfile << "Stat for Queue 2";
+  myfile << "Stat for Queue 1";
   myfile << qd1.Get (0)->GetStats ();
+  myfile << "Stat for Queue 2";
+  myfile << qd1.Get (1)->GetStats ();
   myfile.close ();
 
   myfile.open (dir + "config.txt", std::fstream::in | std::fstream::out | std::fstream::app);
