@@ -17,7 +17,7 @@ python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50011 N-63-0.pcap pl
 python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50012 N-63-0.pcap plotmeTP/TP-S32.plotme plotmeTPP/TP-S32.plotme S3-2 | tee -a overallTP.txt
 python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50013 N-63-0.pcap plotmeTP/TP-S33.plotme plotmeTPP/TP-S33.plotme S3-3 | tee -a overallTP.txt
 python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50014 N-63-0.pcap plotmeTP/TP-S34.plotme plotmeTPP/TP-S34.plotme S3-4 | tee -a overallTP.txt
-python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 500015 N-63-0.pcap plotmeTP/TP-S35.plotme plotmeTPP/TP-S35.plotme S3-5 | tee -a overallTP.txt
+python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50015 N-63-0.pcap plotmeTP/TP-S35.plotme plotmeTPP/TP-S35.plotme S3-5 | tee -a overallTP.txt
 python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50016 N-63-0.pcap plotmeTP/TP-S36.plotme plotmeTPP/TP-S36.plotme S3-6 | tee -a overallTP.txt
 python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50017 N-63-0.pcap plotmeTP/TP-S37.plotme plotmeTPP/TP-S37.plotme S3-7 | tee -a overallTP.txt
 python tp-new.py --startTime=2 --destIp 10.4.0.1 --destPort 50018 N-63-0.pcap plotmeTP/TP-S38.plotme plotmeTPP/TP-S38.plotme S3-8 | tee -a overallTP.txt
@@ -95,6 +95,11 @@ echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfteS2sec.txt
 echo "Queue 1" >> QueueStatsAfteS2sec.txt
 drops=`awk '{if ($1 >= 2) print $0}' drop-1.plotme | wc -l`
 marks=`awk '{if ($1 >= 2) print $0}' mark-1.plotme | wc -l`
+echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfteS2sec.txt
+
+echo "Queue 2" >> QueueStatsAfteS2sec.txt
+drops=`awk '{if ($1 >= 2) print $0}' drop-2.plotme | wc -l`
+marks=`awk '{if ($1 >= 2) print $0}' mark-2.plotme | wc -l`
 echo -e  "$drops Drops, $marks Marks\n" >> QueueStatsAfteS2sec.txt
 
 

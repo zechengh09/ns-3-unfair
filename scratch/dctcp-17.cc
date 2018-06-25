@@ -633,7 +633,7 @@ int main (int argc, char *argv[])
   TrafficControlHelper tch;
   tch.SetRootQueueDisc (queue_disc_type);
 
-  QueueDiscContainer qd, qd1;
+  QueueDiscContainer qd, qd1, qd2;
   tch.Uninstall (T1ScorpDev);
   qd = tch.Install (T1ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize, qd.Get (0));
@@ -650,11 +650,13 @@ int main (int argc, char *argv[])
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-1.plotme");
   qd1.Get (0)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
 
-  Simulator::ScheduleNow (&CheckQueueSize2, qd1.Get (1));
+  tch.Uninstall (R1T2Dev);
+  qd2 = tch.Install (R1T2Dev);
+  Simulator::ScheduleNow (&CheckQueueSize2, qd2.Get (1));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-2.plotme");
-  qd1.Get (1)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
+  qd2.Get (1)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-2.plotme");
-  qd1.Get (1)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
+  qd2.Get (1)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
 
 Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
   Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
