@@ -1,4 +1,4 @@
-set xrange [2:10]
+set xrange [3:10]
 set terminal pngcairo enhanced color lw 2 size 800,600 font 'Arial-Bold'
 set output "queue-0.png"
 set xlabel "Time (sec)"
