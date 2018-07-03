@@ -414,7 +414,7 @@ void InstallPacketSink (Ptr<Node> node, uint16_t port)
   PacketSinkHelper sink ("ns3::TcpSocketFactory",
                          InetSocketAddress (Ipv4Address::GetAny (), port));
   ApplicationContainer sinkApps = sink.Install (node);
-  sinkApps.Start (Seconds (uv->GetValue (0, 1)));
+  sinkApps.Start (Seconds (0));
   sinkApps.Stop (Seconds (stopTime));
 }
 
@@ -428,7 +428,7 @@ void InstallBulkSend (Ptr<Node> node, Ipv4Address address, uint16_t port,
 
   source.SetAttribute ("MaxBytes", UintegerValue (0));
   ApplicationContainer sourceApps = source.Install (node);
-  Time timeToStart = Seconds (0);
+  Time timeToStart = Seconds (uv->GetValue (0, 1));
   sourceApps.Start (timeToStart);
   Simulator::Schedule (timeToStart + Seconds (0.001), &TraceCwnd, nodeId, cwndWindow, CwndTrace);
   sourceApps.Stop (Seconds (stopTime));
