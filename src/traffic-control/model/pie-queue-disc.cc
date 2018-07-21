@@ -98,6 +98,16 @@ TypeId PieQueueDisc::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&PieQueueDisc::m_isCapDropAdjustment),
                    MakeBooleanChecker ())
+    .AddAttribute ("UseEcn",
+                   "True to use ECN (packets are marked instead of being dropped)",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&PieQueueDisc::m_useEcn),
+                   MakeBooleanChecker ())
+    .AddAttribute ("MarkEcnThreshold",
+                   "ECN marking threshold (default 10% as suggested in RFC 8033)",
+                   DoubleValue (0.1),
+                   MakeDoubleAccessor (&PieQueueDisc::m_markEcnTh),
+                   MakeDoubleChecker<double> ())
   ;
 
   return tid;
@@ -155,9 +165,12 @@ PieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
   else if (DropEarly (item, nQueued.GetValue ()))
     {
-      // Early probability drop: proactive
-      DropBeforeEnqueue (item, UNFORCED_DROP);
-      return false;
+      if(!m_useEcn || m_dropProb >= m_markEcnTh || !Mark(item, UNFORCED_MARK))
+        {
+          // Early probability drop: proactive
+          DropBeforeEnqueue (item, UNFORCED_DROP);
+          return false;
+        }
     }
 
   // No drop
