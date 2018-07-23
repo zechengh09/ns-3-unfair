@@ -143,6 +143,7 @@ private:
   uint32_t m_dqThreshold;                       //!< Minimum queue size in bytes before dequeue rate is measured
   bool  m_isCapDropAdjustment;                  //!< Enable/Disable Cap Drop Adjustment feature mentioned in RFC 8033
   bool m_useEcn;                                //!< Enable ECN Marking functionality
+  bool m_useDerandomization;                    //!< Enable Derandomization feature mentioned in RFC 8033
   double m_markEcnTh;                           //!< ECN marking threshold (default 10% as suggested in RFC 8033)
 
   // ** Variables maintained by PIE
@@ -158,9 +159,9 @@ private:
   uint64_t m_dqCount;                           //!< Number of bytes departed since current measurement cycle starts
   EventId m_rtrsEvent;                          //!< Event used to decide the decision of interval of drop probability calculation
   Ptr<UniformRandomVariable> m_uv;              //!< Rng stream
+  double m_accuProb;                            //!< Accumulated drop probability
 };
 
 };   // namespace ns3
 
 #endif
-
