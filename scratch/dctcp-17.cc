@@ -409,6 +409,34 @@ TraceCwnd (uint32_t node, uint32_t cwndWindow,
   Config::ConnectWithoutContext ("/NodeList/" + std::to_string (node) + "/$ns3::TcpL4Protocol/SocketList/" + std::to_string (cwndWindow) + "/CongestionWindow", CwndTrace);
 }
 
+void
+ProbChange0 (double oldP, double newP)
+{
+  std::ofstream fPlotQueue (dir + "ProbTraces/T1.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newP << std::endl;
+  fPlotQueue.close ();
+}
+void
+ProbChange1 (double oldP, double newP)
+{
+  std::ofstream fPlotQueue (dir + "ProbTraces/T2.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newP << std::endl;
+  fPlotQueue.close ();
+}
+void
+ProbChange2 (double oldP, double newP)
+{
+  std::ofstream fPlotQueue (dir + "ProbTraces/Scorp.plotme", std::ios::out | std::ios::app);
+  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newP << std::endl;
+  fPlotQueue.close ();
+}
+/*void
+TraceProb (uint32_t node, uint32_t probability,
+           Callback <void, double> ProbTrace)
+{
+  Config::ConnectWithoutContext ("/NodeList/" + std::to_string (node) + "/$ns3::TcpL4Protocol/SocketList/" + std::to_string (probability) + "/Probability", ProbTrace);
+}*/
+
 void InstallPacketSink (Ptr<Node> node, uint16_t port)
 {
   PacketSinkHelper sink ("ns3::TcpSocketFactory",
@@ -609,6 +637,7 @@ int main (int argc, char *argv[])
   system (dirToSave.c_str ());
   system ((dirToSave + "/pcap/").c_str ());
   system ((dirToSave + "/cwndTraces/").c_str ());
+  system ((dirToSave + "/ProbTraces/").c_str ());
   system ((dirToSave + "/markTraces/").c_str ());
   system ((dirToSave + "/queueTraces/").c_str ());
   system (("cp -R PlotScripts-gfc-dctcp/* " + dir + "/pcap/").c_str ());
@@ -637,6 +666,8 @@ int main (int argc, char *argv[])
   tch.Uninstall (T1ScorpDev);
   qd = tch.Install (T1ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize, qd.Get (0));
+  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/0/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange0));
+//  Simulator::Schedule (Seconds (2.0), &TraceProb, 0, 0, MakeCallback (&ProbChange0));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-0.plotme");
   qd.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-0.plotme");
@@ -645,6 +676,9 @@ int main (int argc, char *argv[])
   tch.Uninstall (T2ScorpDev);
   qd1 = tch.Install (T2ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize1, qd1.Get (0));
+ 
+  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange2));
+//  Simulator::Schedule (Seconds (2.0), &TraceProb, 2, 0, MakeCallback (&ProbChange2));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-1.plotme");
   qd1.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-1.plotme");
@@ -653,29 +687,31 @@ int main (int argc, char *argv[])
   tch.Uninstall (R1T2Dev);
   qd2 = tch.Install (R1T2Dev);
   Simulator::ScheduleNow (&CheckQueueSize2, qd2.Get (1));
+  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/1/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange1));
+//  Simulator::Schedule (Seconds (2.0), &TraceProb, 1, 1, MakeCallback (&ProbChange1));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-2.plotme");
   qd2.Get (1)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-2.plotme");
   qd2.Get (1)->TraceConnectWithoutContext ("Mark", MakeBoundCallback (&MarkAtQueue, streamWrapper));
 
 Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
   Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$" + queue_disc_type + "/MaxSize", QueueSizeValue (QueueSize ("666p")));
 
   Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/QueueRef", DoubleValue (50));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/QueueRef", DoubleValue (50));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/QueueRef", DoubleValue (50));
   Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/QueueRef", DoubleValue (50));
 
   Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/A", DoubleValue ( 0.00007477268187));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/A", DoubleValue (0.007460151193));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.007460151193));
   Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/A", DoubleValue (0.00007477268187));
 
   Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/B", DoubleValue (0.00006680872759));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/B", DoubleValue (0.003907698244));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.003907698244));
   Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/B", DoubleValue (0.00006680872759));
 
   Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/W", DoubleValue (4000));
-  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/W", DoubleValue (4000));
+  Config::Set ("/$ns3::NodeListPriv/NodeList/1/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/W", DoubleValue (4000));
   Config::Set ("/$ns3::NodeListPriv/NodeList/2/$ns3::Node/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/W", DoubleValue (4000));
 
   uint16_t port = 50000;
