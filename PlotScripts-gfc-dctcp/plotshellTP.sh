@@ -116,5 +116,6 @@ gnuplot gnuplotscriptCwnd
 cp Cwnd*.png ../Graphs/
 
 cd ..
+cd ProbTraces
 gnuplot gnuplotscriptProb
 cp *.png ../Graphs/
