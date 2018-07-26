@@ -430,12 +430,13 @@ ProbChange2 (double oldP, double newP)
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << newP << std::endl;
   fPlotQueue.close ();
 }
-/*void
+void
 TraceProb (uint32_t node, uint32_t probability,
-           Callback <void, double> ProbTrace)
+           Callback <void, double, double> ProbTrace)
 {
-  Config::ConnectWithoutContext ("/NodeList/" + std::to_string (node) + "/$ns3::TcpL4Protocol/SocketList/" + std::to_string (probability) + "/Probability", ProbTrace);
-}*/
+/*   Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/0/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange0));*/
+  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/" + std::to_string (node) + "/$ns3::TrafficControlLayer/RootQueueDiscList/" + std::to_string (probability) + "/$ns3::PiQueueDisc/Probability", ProbTrace);
+}
 
 void InstallPacketSink (Ptr<Node> node, uint16_t port)
 {
@@ -666,8 +667,8 @@ int main (int argc, char *argv[])
   tch.Uninstall (T1ScorpDev);
   qd = tch.Install (T1ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize, qd.Get (0));
-  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/0/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange0));
-//  Simulator::Schedule (Seconds (2.0), &TraceProb, 0, 0, MakeCallback (&ProbChange0));
+/*  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/0/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange0));*/
+  Simulator::Schedule (Seconds (2.0), &TraceProb, 0, 0, MakeCallback (&ProbChange0));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-0.plotme");
   qd.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-0.plotme");
@@ -677,8 +678,8 @@ int main (int argc, char *argv[])
   qd1 = tch.Install (T2ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize1, qd1.Get (0));
  
-  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange2));
-//  Simulator::Schedule (Seconds (2.0), &TraceProb, 2, 0, MakeCallback (&ProbChange2));
+/*  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange2));*/
+  Simulator::Schedule (Seconds (2.0), &TraceProb, 2, 0, MakeCallback (&ProbChange2));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-1.plotme");
   qd1.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-1.plotme");
@@ -687,8 +688,8 @@ int main (int argc, char *argv[])
   tch.Uninstall (R1T2Dev);
   qd2 = tch.Install (R1T2Dev);
   Simulator::ScheduleNow (&CheckQueueSize2, qd2.Get (1));
-  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/1/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange1));
-//  Simulator::Schedule (Seconds (2.0), &TraceProb, 1, 1, MakeCallback (&ProbChange1));
+/*  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/1/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange1));*/
+  Simulator::Schedule (Seconds (2.0), &TraceProb, 1, 1, MakeCallback (&ProbChange1));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-2.plotme");
   qd2.Get (1)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/mark-2.plotme");
