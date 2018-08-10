@@ -434,7 +434,6 @@ void
 TraceProb (uint32_t node, uint32_t probability,
            Callback <void, double, double> ProbTrace)
 {
-/*   Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/0/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange0));*/
   Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/" + std::to_string (node) + "/$ns3::TrafficControlLayer/RootQueueDiscList/" + std::to_string (probability) + "/$ns3::PiQueueDisc/Probability", ProbTrace);
 }
 
@@ -667,7 +666,6 @@ int main (int argc, char *argv[])
   tch.Uninstall (T1ScorpDev);
   qd = tch.Install (T1ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize, qd.Get (0));
-/*  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/0/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange0));*/
   Simulator::Schedule (Seconds (2.0), &TraceProb, 0, 0, MakeCallback (&ProbChange0));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-0.plotme");
   qd.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
@@ -678,7 +676,6 @@ int main (int argc, char *argv[])
   qd1 = tch.Install (T2ScorpDev);
   Simulator::ScheduleNow (&CheckQueueSize1, qd1.Get (0));
  
-/*  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange2));*/
   Simulator::Schedule (Seconds (2.0), &TraceProb, 2, 0, MakeCallback (&ProbChange2));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-1.plotme");
   qd1.Get (0)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
@@ -688,7 +685,6 @@ int main (int argc, char *argv[])
   tch.Uninstall (R1T2Dev);
   qd2 = tch.Install (R1T2Dev);
   Simulator::ScheduleNow (&CheckQueueSize2, qd2.Get (1));
-/*  Config::ConnectWithoutContext ("$ns3::NodeListPriv/NodeList/1/$ns3::TrafficControlLayer/RootQueueDiscList/1/$ns3::PiQueueDisc/Probability", MakeCallback (&ProbChange1));*/
   Simulator::Schedule (Seconds (2.0), &TraceProb, 1, 1, MakeCallback (&ProbChange1));
   streamWrapper = asciiTraceHelper.CreateFileStream (dir + "/queueTraces/drop-2.plotme");
   qd2.Get (1)->TraceConnectWithoutContext ("Drop", MakeBoundCallback (&DropAtQueue, streamWrapper));
@@ -776,9 +772,36 @@ Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLaye
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   pointToPointSR.EnablePcapAll (dir + "pcap/N", true);
+  Ptr<FlowMonitor> monitor;
+  FlowMonitorHelper flowmon;
+  monitor=flowmon.InstallAll();
 
   Simulator::Stop (Seconds (stopTime));
   Simulator::Run ();
+  
+  monitor->CheckForLostPackets ();
+  Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
+  FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
+  for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
+    {
+      // first 2 FlowIds are for ECHO apps, we don't want to display them
+      //
+      // Duration for throughput measurement is 9.0 seconds, since
+      //   StartTime of the OnOffApplication is at about "second 1"
+      // and
+      //   Simulator::Stops at "second 10".
+      if (i->first > 2)
+        {
+          Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
+          std::cout << "Flow " << i->first - 2 << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
+          std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
+          std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
+          std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
+          std::cout << "  Rx Packets: " << i->second.rxPackets << "\n";
+          std::cout << "  Rx Bytes:   " << i->second.rxBytes << "\n";
+          std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
+        }
+  }
   std::ofstream myfile;
   myfile.open (dir + "queueStats.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   myfile << std::endl;
