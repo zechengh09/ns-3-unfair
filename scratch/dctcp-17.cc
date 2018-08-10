@@ -90,305 +90,10 @@ CheckQueueSize2 (Ptr<QueueDisc> queue)
 }
 
 static void
-CwndChangeS10 (uint32_t oldCwnd, uint32_t newCwnd)
+CwndChange (Ptr<OutputStreamWrapper> stream, uint32_t oldCwnd, uint32_t newCwnd)
 {
-  std::ofstream fPlotQueue (dir + "cwndTraces/S10.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " " << newCwnd << std::endl;
 }
-
-static void
-CwndChangeS11 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S11.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS12 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S12.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS13 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S13.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS14 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S14.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS15 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S15.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS16 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S16.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS17 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S17.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS18 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S18.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS19 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S19.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS20 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S20.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS21 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S21.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS22 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S22.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS23 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S23.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS24 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S24.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS25 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S25.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS26 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S26.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS27 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S27.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS28 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S28.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS29 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S29.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS210 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S210.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS211 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S211.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS212 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S212.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS213 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S213.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS214 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S214.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS215 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S215.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS216 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S216.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS217 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S217.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS218 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S218.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS219 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S219.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS30 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S30.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS31 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S31.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS32 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S32.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS33 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S33.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS34 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S34.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
-static void
-CwndChangeS35 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S35.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS36 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S36.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS37 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S37.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS38 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S38.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-static void
-CwndChangeS39 (uint32_t oldCwnd, uint32_t newCwnd)
-{
-  std::ofstream fPlotQueue (dir + "cwndTraces/S39.plotme", std::ios::out | std::ios::app);
-  fPlotQueue << Simulator::Now ().GetSeconds () << " " << newCwnd/1446.0 << std::endl;
-  fPlotQueue.close ();
-}
-
 
 static void
 DropAtQueue (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item)
@@ -717,28 +422,19 @@ Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLaye
     {
       InstallPacketSink (R1.Get (0), port+i);
     }
-
+  
   //Install BulkSend applications on S1 and S3
-  InstallBulkSend (S1.Get (0), R1Int.GetAddress (0), port, 3, 0, MakeCallback (&CwndChangeS10));
-  InstallBulkSend (S1.Get (1), R1Int.GetAddress (0), port+1, 4, 0, MakeCallback (&CwndChangeS11));
-  InstallBulkSend (S1.Get (2), R1Int.GetAddress (0), port+2, 5, 0, MakeCallback (&CwndChangeS12));
-  InstallBulkSend (S1.Get (3), R1Int.GetAddress (0), port+3, 6, 0, MakeCallback (&CwndChangeS13));
-  InstallBulkSend (S1.Get (4), R1Int.GetAddress (0), port+4, 7, 0, MakeCallback (&CwndChangeS14));
-  InstallBulkSend (S1.Get (5), R1Int.GetAddress (0), port+5, 8, 0, MakeCallback (&CwndChangeS15));
-  InstallBulkSend (S1.Get (6), R1Int.GetAddress (0), port+6, 9, 0, MakeCallback (&CwndChangeS16));
-  InstallBulkSend (S1.Get (7), R1Int.GetAddress (0), port+7, 10, 0, MakeCallback (&CwndChangeS17));
-  InstallBulkSend (S1.Get (8), R1Int.GetAddress (0), port+8, 11, 0, MakeCallback (&CwndChangeS18));
-  InstallBulkSend (S1.Get (9), R1Int.GetAddress (0), port+9, 12, 0, MakeCallback (&CwndChangeS19));
-  InstallBulkSend (S3.Get (0), R1Int.GetAddress (0), port+10, 33, 0, MakeCallback (&CwndChangeS30));
-  InstallBulkSend (S3.Get (1), R1Int.GetAddress (0), port+11, 34, 0, MakeCallback (&CwndChangeS31));
-  InstallBulkSend (S3.Get (2), R1Int.GetAddress (0), port+12, 35, 0, MakeCallback (&CwndChangeS32));
-  InstallBulkSend (S3.Get (3), R1Int.GetAddress (0), port+13, 36, 0, MakeCallback (&CwndChangeS33));
-  InstallBulkSend (S3.Get (4), R1Int.GetAddress (0), port+14, 37, 0, MakeCallback (&CwndChangeS34));
-  InstallBulkSend (S3.Get (5), R1Int.GetAddress (0), port+15, 38, 0, MakeCallback (&CwndChangeS35));
-  InstallBulkSend (S3.Get (6), R1Int.GetAddress (0), port+16, 39, 0, MakeCallback (&CwndChangeS36));
-  InstallBulkSend (S3.Get (7), R1Int.GetAddress (0), port+17, 40, 0, MakeCallback (&CwndChangeS37));
-  InstallBulkSend (S3.Get (8), R1Int.GetAddress (0), port+18, 41, 0, MakeCallback (&CwndChangeS38));
-  InstallBulkSend (S3.Get (9), R1Int.GetAddress (0), port+19, 42, 0, MakeCallback (&CwndChangeS39));
+  for (int i = 0; i < 10; i++)
+    {
+      Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream (dir + "cwndTraces/S1" + std::to_string (i) + ".plotme");
+      InstallBulkSend (S1.Get (i), R1Int.GetAddress (0), port + i, 3 + i, 0, MakeBoundCallback (&CwndChange, stream));
+    }
+
+  for (int i = 0; i < 10; i++)
+    {
+      Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream (dir + "cwndTraces/S3" + std::to_string (i) + ".plotme");
+      InstallBulkSend (S3.Get (i), R1Int.GetAddress (0), port + 10 + i, 33 + i, 0, MakeBoundCallback (&CwndChange, stream));
+    }
 
   //Install Sink applications on R2
   for (uint32_t i = 0; i < R2.GetN (); i++)
@@ -747,27 +443,12 @@ Config::Set ("/$ns3::NodeListPriv/NodeList/0/$ns3::Node/$ns3::TrafficControlLaye
     }
 
   //Install BulkSend applications on S2
-  InstallBulkSend (S2.Get (0), R2Int.GetAddress (0), port, 13, 0, MakeCallback (&CwndChangeS20));
-  InstallBulkSend (S2.Get (1), R2Int.GetAddress (2), port, 14, 0, MakeCallback (&CwndChangeS21));
-  InstallBulkSend (S2.Get (2), R2Int.GetAddress (4), port, 15, 0, MakeCallback (&CwndChangeS22));
-  InstallBulkSend (S2.Get (3), R2Int.GetAddress (6), port, 16, 0, MakeCallback (&CwndChangeS23));
-  InstallBulkSend (S2.Get (4), R2Int.GetAddress (8), port, 17, 0, MakeCallback (&CwndChangeS24));
-  InstallBulkSend (S2.Get (5), R2Int.GetAddress (10), port, 18, 0, MakeCallback (&CwndChangeS25));
-  InstallBulkSend (S2.Get (6), R2Int.GetAddress (12), port, 19, 0, MakeCallback (&CwndChangeS26));
-  InstallBulkSend (S2.Get (7), R2Int.GetAddress (14), port, 20, 0, MakeCallback (&CwndChangeS27));
-  InstallBulkSend (S2.Get (8), R2Int.GetAddress (16), port, 21, 0, MakeCallback (&CwndChangeS28));
-  InstallBulkSend (S2.Get (9), R2Int.GetAddress (18), port, 22, 0, MakeCallback (&CwndChangeS29));
-  InstallBulkSend (S2.Get (10), R2Int.GetAddress (20), port, 23, 0, MakeCallback (&CwndChangeS210));
-  InstallBulkSend (S2.Get (11), R2Int.GetAddress (22), port, 24, 0, MakeCallback (&CwndChangeS211));
-  InstallBulkSend (S2.Get (12), R2Int.GetAddress (24), port, 25, 0, MakeCallback (&CwndChangeS212));
-  InstallBulkSend (S2.Get (13), R2Int.GetAddress (26), port, 26, 0, MakeCallback (&CwndChangeS213));
-  InstallBulkSend (S2.Get (14), R2Int.GetAddress (28), port, 27, 0, MakeCallback (&CwndChangeS214));
-  InstallBulkSend (S2.Get (15), R2Int.GetAddress (30), port, 28, 0, MakeCallback (&CwndChangeS215));
-  InstallBulkSend (S2.Get (16), R2Int.GetAddress (32), port, 29, 0, MakeCallback (&CwndChangeS216));
-  InstallBulkSend (S2.Get (17), R2Int.GetAddress (34), port, 30, 0, MakeCallback (&CwndChangeS217));
-  InstallBulkSend (S2.Get (18), R2Int.GetAddress (36), port, 31, 0, MakeCallback (&CwndChangeS218));
-  InstallBulkSend (S2.Get (19), R2Int.GetAddress (38), port, 32, 0, MakeCallback (&CwndChangeS219));
 
+  for (int i = 0; i < 20; i++)
+    {
+      Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream (dir + "cwndTraces/S2" + std::to_string (i) + ".plotme");
+      InstallBulkSend (S2.Get (i), R2Int.GetAddress (2 * i), port, 13 + i, 0, MakeBoundCallback (&CwndChange, stream));
+    }
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
