@@ -2749,7 +2749,7 @@ TcpSocketBase::ConnectionSucceeded ()
 }
 
 void
-TcpSocketBase::AddSocketTags (const Ptr<Packet> &p) const
+TcpSocketBase::AddSocketTags (const Ptr<Packet> &p, bool withEct) const
 {
   /*
    * Add tags for each socket option.
@@ -2760,7 +2760,7 @@ TcpSocketBase::AddSocketTags (const Ptr<Packet> &p) const
   if (GetIpTos ())
     {
       SocketIpTosTag ipTosTag;
-      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && CheckEcnEct0 (GetIpTos ()))
+      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (CheckEcnEct0 (GetIpTos ()) || withEct))
         {
           // Set ECT(0) if ECN is enabled with the last received ipTos
           ipTosTag.SetTos (MarkEcnEct0 (GetIpTos ()));
@@ -2774,19 +2774,27 @@ TcpSocketBase::AddSocketTags (const Ptr<Packet> &p) const
     }
   else
     {
-      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && p->GetSize () > 0)
+      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (p->GetSize () > 0 || withEct))
         {
           // Set ECT(0) if ECN is enabled and ipTos is 0
           SocketIpTosTag ipTosTag;
           ipTosTag.SetTos (MarkEcnEct0 (GetIpTos ()));
           p->AddPacketTag (ipTosTag);
         }
+      else
+        {
+          // Not set ECT
+          SocketIpTosTag ipTosTag;
+          ipTosTag.SetTos (ClearEcnBits (GetIpTos ()));
+          p->AddPacketTag (ipTosTag);
+        }
+
     }
 
   if (IsManualIpv6Tclass ())
     {
       SocketIpv6TclassTag ipTclassTag;
-      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && CheckEcnEct0 (GetIpv6Tclass ()))
+      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (CheckEcnEct0 (GetIpv6Tclass ()) || withEct))
         {
           // Set ECT(0) if ECN is enabled with the last received ipTos
           ipTclassTag.SetTclass (MarkEcnEct0 (GetIpv6Tclass ()));
@@ -2800,11 +2808,18 @@ TcpSocketBase::AddSocketTags (const Ptr<Packet> &p) const
     }
   else
     {
-      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && p->GetSize () > 0)
+      if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (p->GetSize () > 0 || withEct))
         {
           // Set ECT(0) if ECN is enabled and ipTos is 0
           SocketIpv6TclassTag ipTclassTag;
           ipTclassTag.SetTclass (MarkEcnEct0 (GetIpv6Tclass ()));
+          p->AddPacketTag (ipTclassTag);
+        }
+      else
+        {
+          // Not set ECT
+          SocketIpv6TclassTag ipTclassTag;
+          ipTclassTag.SetTclass (ClearEcnBits (GetIpv6Tclass ()));
           p->AddPacketTag (ipTclassTag);
         }
     }
