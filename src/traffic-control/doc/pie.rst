@@ -19,7 +19,8 @@ The source code for the PIE model is located in the directory ``src/traffic-cont
 and consists of 2 files `pie-queue-disc.h` and `pie-queue-disc.cc` defining a PieQueueDisc
 class. The code was ported to |ns3| by Mohit P. Tahiliani, Shravya K. S. and Smriti Murali
 based on ns-2 code implemented by Preethi Natarajan, Rong Pan, Chiara Piglione, Greg White
-and Takashi Hayakawa.  
+and Takashi Hayakawa. The implementation was aligned with RFC 8033 by Vivek Jain and Mohit
+P. Tahiliani after ns-3.29 release.
 
 * class :cpp:class:`PieQueueDisc`: This class implements the main PIE algorithm:
 
@@ -56,6 +57,11 @@ The key attributes that the PieQueue class holds include the following:
 * ``MaxBurstAllowance:`` Current max burst allowance in seconds before random drop. The default value is 0.1 seconds.
 * ``A:`` Value of alpha. The default value is 0.125.
 * ``B:`` Value of beta. The default value is 1.25.
+* ``UseEcn:`` True to use ECN. Packets are marked instead of being dropped (Default: false).
+* ``MarkEcnThreshold:`` ECN marking threshold (Default: 10% as suggested in RFC 8033).
+* ``UseActiveInactiveMode:`` Enable/Disable Activeness feature mentioned in RFC 8033 (Default: false).
+* ``UseDerandomization:`` Enable/Disable Derandomization feature mentioned in RFC 8033 (Default: false).
+* ``UseCapDropAdjustment:`` Enable/Disable Cap Drop Adjustment feature mentioned in RFC 8033 (Default: true).
 
 Examples
 ========
