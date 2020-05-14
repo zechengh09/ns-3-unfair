@@ -982,6 +982,10 @@ protected:
    */
   virtual void ReceivedData (Ptr<Packet> packet, const TcpHeader& tcpHeader);
 
+  virtual void EstimateLoss(Ptr<Packet> p, const SequenceNumber32 expectedSeq, const TcpHeader& tcpHeader);
+
+  virtual void EstimateFairShare(Ptr<Packet> p);
+
   /**
    * \brief Take into account the packet for RTT estimation
    * \param tcpHeader the packet's TCP header
@@ -1239,6 +1243,10 @@ protected:
   TracedValue<uint32_t> m_advWnd             {0};  //!< Advertised Window size
   TracedValue<SequenceNumber32> m_highRxMark {0};  //!< Highest seqno received
   TracedValue<SequenceNumber32> m_highRxAckMark {0}; //!< Highest ack received
+  SequenceNumber32 m_last_received_seq;
+  uint32_t m_lost_count;
+  SequenceNumber32 m_highest_seq;
+  uint32_t m_throughput;
 
   // Options
   bool    m_sackEnabled       {true}; //!< RFC SACK option enabled
@@ -1276,6 +1284,38 @@ protected:
    * \brief Inflated congestion window trace (not used in the real code, deprecated)
    */
   TracedValue<uint32_t> m_cWndInfl {0};
+
+  void ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
+                          TcpHeader header, Ipv4Address localaddr,
+                          Ipv4Address peeraddr, Ptr<NetDevice> boundnetdevice);
+  void SendAck ();
+  void ScheduleSendAck ();
+
+  Time m_ackPeriod;
+  Time m_prevAck;
+  bool m_sendBbr;
+  bool m_recvBbr;
+  std::string m_model;
+
+  struct PendingAck {
+    Ptr<TcpL4Protocol> tcp; 
+    Ptr<Packet> p;
+    TcpHeader header; 
+    Ipv4Address localaddr;
+    Ipv4Address peeraddr;
+    Ptr<NetDevice> boundnetdevice;
+  };
+  std::deque<PendingAck> m_pendingAcks;
+
+public:
+
+  void SetAckPeriod (Time period) { m_ackPeriod = period; }
+  Time GetAckPeriod () const { return m_ackPeriod; }
+  void SetModel (std::string model) { m_model = model; }
+  std::string GetModel () const { return m_model; }
+  size_t getNumPendingAcks() const { return m_pendingAcks.size(); }
+  bool recvBbr() const { return m_recvBbr; }
+
 };
 
 /**

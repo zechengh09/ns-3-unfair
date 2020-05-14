@@ -40,6 +40,7 @@
 #include "ns3/uinteger.h"
 #include "ns3/double.h"
 #include "ns3/pointer.h"
+#include "ns3/string.h"
 #include "ns3/trace-source-accessor.h"
 #include "ns3/data-rate.h"
 #include "ns3/object.h"
@@ -57,6 +58,12 @@
 
 #include <math.h>
 #include <algorithm>
+#include <cassert>
+#include <unordered_set>
+
+#include "bbr-tag.h"
+
+std::unordered_set<ns3::TcpSocketBase*> tcpSocketBases;
 
 namespace ns3 {
 
@@ -137,6 +144,15 @@ TcpSocketBase::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TcpSocketBase::m_limitedTx),
                    MakeBooleanChecker ())
+    .AddAttribute ("AckPeriod", "Time between sending acks",
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&TcpSocketBase::SetAckPeriod,
+                                     &TcpSocketBase::GetAckPeriod),
+                   MakeTimeChecker ())
+    .AddAttribute ("Model", "Path to model file", StringValue (""),
+                   MakeStringAccessor (&TcpSocketBase::SetModel,
+                                       &TcpSocketBase::GetModel),
+                   MakeStringChecker ())
     .AddTraceSource ("RTO",
                      "Retransmission timeout",
                      MakeTraceSourceAccessor (&TcpSocketBase::m_rto),
@@ -335,6 +351,7 @@ TcpSocketBase::TcpSocketBase (void)
   ok = m_tcb->TraceConnectWithoutContext ("RTT",
                                           MakeCallback (&TcpSocketBase::UpdateRtt, this));
   NS_ASSERT (ok == true);
+    tcpSocketBases.insert(this);
 }
 
 TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
@@ -383,7 +400,13 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
     m_isFirstPartialAck (sock.m_isFirstPartialAck),
     m_txTrace (sock.m_txTrace),
     m_rxTrace (sock.m_rxTrace),
-    m_pacingTimer (Timer::REMOVE_ON_DESTROY)
+    m_pacingTimer (Timer::REMOVE_ON_DESTROY),
+    m_ackPeriod (sock.m_ackPeriod),
+    m_prevAck (sock.m_prevAck),
+    m_sendBbr (sock.m_sendBbr),
+    m_recvBbr (sock.m_recvBbr),
+    m_model (sock.m_model)
+    // Don't copy pendingAcks - don't want duplciate acks
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_LOGIC ("Invoked the copy constructor");
@@ -443,6 +466,7 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
   ok = m_tcb->TraceConnectWithoutContext ("RTT",
                                           MakeCallback (&TcpSocketBase::UpdateRtt, this));
   NS_ASSERT (ok == true);
+  tcpSocketBases.insert(this);
 }
 
 TcpSocketBase::~TcpSocketBase (void)
@@ -472,6 +496,7 @@ TcpSocketBase::~TcpSocketBase (void)
     }
   m_tcp = 0;
   CancelAllTimers ();
+  tcpSocketBases.erase(this);
 }
 
 /* Associate a node with this TCP socket */
@@ -2494,8 +2519,16 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
 
   if (m_endPoint != nullptr)
     {
-      m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
-                         m_endPoint->GetPeerAddress (), m_boundnetdevice);
+      if (flags & TcpHeader::ACK)
+        {
+          ScheduleAckPacket (m_tcp, p, header, m_endPoint->GetLocalAddress (),
+                             m_endPoint->GetPeerAddress (), m_boundnetdevice);
+        }
+      else
+        {
+          m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
+                             m_endPoint->GetPeerAddress (), m_boundnetdevice);
+        }
     }
   else
     {
@@ -3087,6 +3120,15 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
 
   // Put into Rx buffer
   SequenceNumber32 expectedSeq = m_rxBuffer->NextRxSequence ();
+
+  EstimateLoss(p, expectedSeq, tcpHeader);
+  EstimateFairShare(p);
+
+  BbrTag tag;
+  auto good = p->FindFirstMatchingByteTag(tag);
+  assert(good);
+  m_recvBbr = tag.isBbr;
+
   if (!m_rxBuffer->Add (p, tcpHeader))
     { // Insert failed: No data or RX buffer full
       SendEmptyPacket (TcpHeader::ACK);
@@ -3135,6 +3177,45 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
                         (Simulator::Now () + Simulator::GetDelayLeft (m_delAckEvent)).GetSeconds ());
         }
     }
+}
+
+void TcpSocketBase::EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq, const TcpHeader& tcpHeader) {
+  // If expected sequence number does not match the one received
+  // and it's one packet larger than the last received sequence
+  if (expectedSeq != tcpHeader.GetSequenceNumber() &&
+      tcpHeader.GetSequenceNumber() > m_last_received_seq + p->GetSize()) {
+    // Assuming packet size is constant
+    if (tcpHeader.GetSequenceNumber() < m_highest_seq) {
+      // Loss in retransmit
+//      m_lost_count += (tcpHeader.GetSequenceNumber() - m_last_received_seq - p->GetSize()) / p->GetSize();
+      // We don't know the byte ordering from received buffer, so this is just an estimate
+      // Assuming the loss rate during retransmit would be low
+      m_lost_count += 1;
+    } else if (tcpHeader.GetSequenceNumber() > m_highest_seq + p->GetSize())  {
+      // Loss in new packets
+      m_lost_count += (tcpHeader.GetSequenceNumber() - m_highest_seq - p->GetSize()) / p->GetSize();
+    }
+  }
+
+  m_last_received_seq = tcpHeader.GetSequenceNumber();
+
+  if (m_last_received_seq > m_highest_seq) {
+    m_highest_seq = m_last_received_seq;
+  }
+}
+
+void TcpSocketBase::EstimateFairShare(Ptr<Packet> p) {
+  // First Mathis Model
+  double mss = (double)p->GetSize();
+  double rtt = m_rtt->GetEstimate().GetSeconds();
+  double c = 1.2247;
+  // TODO: Need to determine how far we look ahead
+  double loss_rate = m_lost_count / (m_highest_seq.GetValue() / mss);
+  m_throughput = 8 * (mss * c) / (rtt * sqrt(loss_rate)); // In bps
+
+//  std::cout << "RTT" << rtt << std::endl;
+//  std::cout << "LOSS RATE" << loss_rate << std::endl;
+//  std::cout << throughput << std::endl;
 }
 
 /**
@@ -3999,6 +4080,53 @@ TcpSocketBase::NotifyPacingPerformed (void)
   NS_LOG_FUNCTION_NOARGS ();
   NS_LOG_INFO ("Performing Pacing");
   SendPendingData (m_connected);
+}
+
+void
+TcpSocketBase::ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
+                                  TcpHeader header, Ipv4Address localaddr,
+                                  Ipv4Address peeraddr,
+                                  Ptr<NetDevice> boundnetdevice)
+{
+    if (!m_recvBbr || m_ackPeriod == 0 || m_prevAck + m_ackPeriod < Simulator::Now ())
+    {
+      if (!m_pendingAcks.empty()) {
+          fprintf(stderr, "m_pendingAcks should be empty\n");
+      }
+      // assert(m_pendingAcks.empty());
+      m_prevAck = Simulator::Now ();
+      tcp->SendPacket (p, header, localaddr, peeraddr, boundnetdevice);
+      return;
+    }
+
+    m_pendingAcks.push_back({tcp, p, header, localaddr, peeraddr, boundnetdevice});
+
+    if (m_pendingAcks.size() == 1)
+    {
+        ScheduleSendAck();
+    }
+}
+
+void
+TcpSocketBase::SendAck() {
+    assert(!m_pendingAcks.empty());
+    auto& pending = m_pendingAcks.front();
+
+    pending.tcp->SendPacket (pending.p, pending.header, pending.localaddr, pending.peeraddr, pending.boundnetdevice);
+    m_pendingAcks.pop_front();
+
+    m_prevAck = Simulator::Now ();
+
+    if (! m_pendingAcks.empty())
+    {
+        ScheduleSendAck();
+    }
+}
+
+void
+TcpSocketBase::ScheduleSendAck() {
+    auto delay = (m_prevAck + m_ackPeriod) - Simulator::Now ();
+    Simulator::Schedule(delay, &TcpSocketBase::SendAck, this);
 }
 
 
