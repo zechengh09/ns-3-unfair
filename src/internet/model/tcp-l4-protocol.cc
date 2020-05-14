@@ -201,6 +201,7 @@ TcpL4Protocol::CreateSocket (TypeId congestionTypeId)
 Ptr<Socket>
 TcpL4Protocol::CreateSocket (void)
 {
+  // Not a good way to initialize one BBR flow and other Cubic flows
   TypeId type_id = TypeId::LookupByName("ns3::TcpBbr");
   if (m_count >= 3) {
     if (useReno) {
@@ -212,7 +213,6 @@ TcpL4Protocol::CreateSocket (void)
   m_congestionTypeId = type_id;
   m_count++;
   return CreateSocket (type_id);
-
 }
 
 Ipv4EndPoint *

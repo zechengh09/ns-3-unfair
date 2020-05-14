@@ -2529,6 +2529,20 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
           m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
                              m_endPoint->GetPeerAddress (), m_boundnetdevice);
         }
+      Time cur_time = Simulator::Now();
+
+      // If the current ACK is scheduled sooner than previous ACKs, push back
+      if (cur_time + m_delay < m_last_sent) {
+        m_delay = m_last_sent - cur_time;
+      }
+      Simulator::Schedule (m_delay, &TcpL4Protocol::SendPacket, m_tcp, p, header,
+                           m_endPoint->GetLocalAddress (), m_endPoint->GetPeerAddress (), m_boundnetdevice);
+
+      // Update timestamp of the last ACK sent
+      m_last_sent = cur_time + m_delay;
+
+//      m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
+//                         m_endPoint->GetPeerAddress (), m_boundnetdevice);
     }
   else
     {
@@ -3121,6 +3135,9 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   // Put into Rx buffer
   SequenceNumber32 expectedSeq = m_rxBuffer->NextRxSequence ();
 
+  // Store the timestamp of receiving this packet
+  m_packet_queue.push_back(Simulator::Now().GetMilliSeconds());
+
   EstimateLoss(p, expectedSeq, tcpHeader);
   EstimateFairShare(p);
 
@@ -3181,41 +3198,111 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
 
 void TcpSocketBase::EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq, const TcpHeader& tcpHeader) {
   // If expected sequence number does not match the one received
-  // and it's one packet larger than the last received sequence
+  // and it's larger than the last received sequence plus one packet size
   if (expectedSeq != tcpHeader.GetSequenceNumber() &&
       tcpHeader.GetSequenceNumber() > m_last_received_seq + p->GetSize()) {
     // Assuming packet size is constant
     if (tcpHeader.GetSequenceNumber() < m_highest_seq) {
       // Loss in retransmit
-//      m_lost_count += (tcpHeader.GetSequenceNumber() - m_last_received_seq - p->GetSize()) / p->GetSize();
       // We don't know the byte ordering from received buffer, so this is just an estimate
       // Assuming the loss rate during retransmit would be low
-      m_lost_count += 1;
+      m_loss_queue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), 1));
+
     } else if (tcpHeader.GetSequenceNumber() > m_highest_seq + p->GetSize())  {
       // Loss in new packets
-      m_lost_count += (tcpHeader.GetSequenceNumber() - m_highest_seq - p->GetSize()) / p->GetSize();
+      uint32_t loss_packets = (tcpHeader.GetSequenceNumber() - m_highest_seq - p->GetSize()) / p->GetSize();
+      m_loss_queue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), loss_packets));
     }
   }
 
+  // Update m_last_received_seq to record the last sequence number received
   m_last_received_seq = tcpHeader.GetSequenceNumber();
 
+  // Update the highest sequence number
   if (m_last_received_seq > m_highest_seq) {
     m_highest_seq = m_last_received_seq;
   }
 }
 
 void TcpSocketBase::EstimateFairShare(Ptr<Packet> p) {
-  // First Mathis Model
-  double mss = (double)p->GetSize();
-  double rtt = m_rtt->GetEstimate().GetSeconds();
-  double c = 1.2247;
-  // TODO: Need to determine how far we look ahead
-  double loss_rate = m_lost_count / (m_highest_seq.GetValue() / mss);
-  m_throughput = 8 * (mss * c) / (rtt * sqrt(loss_rate)); // In bps
+  // Since BBR's probeBW lasts for eight RTT cycles, here we also measure the throughput for last 8 * RTT
+  uint32_t num_rtts = 8;
 
-//  std::cout << "RTT" << rtt << std::endl;
-//  std::cout << "LOSS RATE" << loss_rate << std::endl;
-//  std::cout << throughput << std::endl;
+  // First remove packets and losses older than 8 * RTT
+  int64_t cutoff = Simulator::Now().GetMilliSeconds() - (num_rtts * m_rtt->GetEstimate().GetMilliSeconds());
+
+  while(m_packet_queue.size() > 0 && m_packet_queue.front() < cutoff) {
+    m_packet_queue.pop_front();
+  }
+
+  while(m_loss_queue.size() > 0 && std::get<0>(m_loss_queue.front()) < cutoff) {
+    m_loss_queue.pop_front();
+  }
+
+  // Check if BBR enters probeRTT phase - it compares the number of packets received in last RTT
+  // against the average of 8 RTTs.
+  int64_t last_rtt = Simulator::Now().GetMilliSeconds() - (m_rtt->GetEstimate().GetMilliSeconds());
+  uint32_t last_rtt_packets = 0;
+  for (auto throughput_iter = m_packet_queue.rbegin();
+       throughput_iter != m_packet_queue.rend() && *throughput_iter > last_rtt;
+       ++throughput_iter) {
+    last_rtt_packets++;
+  }
+
+  // If last RTT received one tenth of its average throughput, reply ACK as soon as possible.
+  if (last_rtt_packets * num_rtts < (m_packet_queue.size() / 10)) {
+    m_delay = Seconds(0.0);
+    return;
+  }
+
+
+  // Count the number of packet loss
+  int loss_count = 0;
+  for (auto loss_iter = m_loss_queue.begin(); loss_iter != m_loss_queue.end(); ++loss_iter) {
+    loss_count += std::get<1>(*loss_iter);
+  }
+
+  // Mathis Model
+  double c = 1.2247; // Constant C
+  double loss_rate = loss_count / (1.0 * (loss_count + m_packet_queue.size()));
+  double rtt = m_rtt->GetEstimate().GetSeconds();
+  if (loss_rate > 0) {
+    m_fair_throughput = c / (rtt * sqrt(loss_rate)); // In number of packets per second
+//    if (m_congestionControl->GetName().compare("TcpBbr") == 0) {
+//      std::cout << "BBR " << m_fair_throughput << std::endl;
+//    } else {
+//      std::cout << "BBR " << m_fair_throughput << std::endl;
+//    }
+  }
+
+//  if (m_congestionControl->GetName().compare("TcpBbr") == 0) {
+//    rtt += 0.015;
+//  }
+
+  double actual_throughput = (m_packet_queue.size()) / (1.0 * num_rtts * rtt);
+
+  actual_throughput = last_rtt_packets / (1.0 * rtt);
+
+  if (Simulator::Now().GetMilliSeconds() < m_rtt->GetEstimate().GetMilliSeconds()) {
+    actual_throughput = (m_packet_queue.size()) / (1.0 * Simulator::Now().GetSeconds());
+  }
+
+
+//  if (m_congestionControl->GetName().compare("TcpBbr") == 0) {
+//    std::cout << m_rtt->GetEstimate().GetMilliSeconds() << std::endl;
+//  }
+
+//  if (rtt > 0.054) {
+//    std::cout << m_rtt->GetEstimate().GetMilliSeconds() << std::endl;
+//  }
+
+//  m_fair_throughput = 73.0;
+  if (m_fair_throughput > 0.0 && actual_throughput > m_fair_throughput) {
+    m_delay = Seconds(rtt * sqrt(actual_throughput / m_fair_throughput) * 0.25);
+    m_delay_start = Simulator::Now();
+  } else {
+    m_delay = Seconds(0.0);
+  }
 }
 
 /**

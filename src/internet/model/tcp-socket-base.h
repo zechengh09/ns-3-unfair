@@ -1243,10 +1243,16 @@ protected:
   TracedValue<uint32_t> m_advWnd             {0};  //!< Advertised Window size
   TracedValue<SequenceNumber32> m_highRxMark {0};  //!< Highest seqno received
   TracedValue<SequenceNumber32> m_highRxAckMark {0}; //!< Highest ack received
-  SequenceNumber32 m_last_received_seq;
-  uint32_t m_lost_count;
-  SequenceNumber32 m_highest_seq;
-  uint32_t m_throughput;
+
+  // Ack Pacing
+  SequenceNumber32 m_last_received_seq; //!< Sequence number of the last received packet
+  std::deque<std::pair<int64_t, uint32_t>> m_loss_queue; //!< Queue of loss packets - <Time, loss count>
+  std::deque<int64_t> m_packet_queue; //!< Queue of timestamp for received packets
+  SequenceNumber32 m_highest_seq {0}; //!< Highest sequence number so far received
+  uint32_t m_fair_throughput {0}; //!< Fair throughput calculated by Mathis Model
+  Time m_delay {Seconds(0.0)}; //!< Delay of current ACK
+  Time m_delay_start {Seconds(0.0)};
+  Time m_last_sent {Seconds(0.0)}; //!< Time of the last ACK sent
 
   // Options
   bool    m_sackEnabled       {true}; //!< RFC SACK option enabled
