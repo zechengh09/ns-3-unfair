@@ -52,6 +52,19 @@ class TcpOption;
 class Ipv4Interface;
 class Ipv6Interface;
 
+enum EstimationType {
+    Mathis,
+    Padhye,
+    TFRC
+};
+
+enum AckPacingType {
+    Algo,
+    Ai,
+    None
+};
+
+
 /**
  * \ingroup tcp
  *
@@ -982,6 +995,23 @@ protected:
    */
   virtual void ReceivedData (Ptr<Packet> packet, const TcpHeader& tcpHeader);
 
+
+  /**
+   * \brief Estimate the loss packets based on the received sequence number
+   * \param p Pointer to the packet
+   * \param expectedSeq Expected sequence number of the next data packet
+   * \param tcpHeader TCP header for the incoming packet
+   */
+  virtual void EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq,
+                                            const TcpHeader& tcpHeader);
+
+  /**
+   * \brief Estimate the fair share of the current flow
+   * \param p Pointer to the packet
+   */
+  virtual void EstimateFairShare(Ptr<Packet> p);
+
+
   /**
    * \brief Take into account the packet for RTT estimation
    * \param tcpHeader the packet's TCP header
@@ -1239,6 +1269,18 @@ protected:
   TracedValue<uint32_t> m_advWnd             {0};  //!< Advertised Window size
   TracedValue<SequenceNumber32> m_highRxMark {0};  //!< Highest seqno received
   TracedValue<SequenceNumber32> m_highRxAckMark {0}; //!< Highest ack received
+
+  // Ack Pacing
+  std::deque<std::pair<int64_t, uint32_t>> m_loss_queue; //!< Queue of loss packets - <Time, loss count>
+  std::deque<int64_t> m_packet_queue;                    //!< Queue of timestamp for received packets
+  SequenceNumber32 m_highest_seq             {0};        //!< Highest sequence number so far received
+  SequenceNumber32 m_last_received_seq       {0};        //!< Sequence number of the last received packet
+  uint32_t m_fair_throughput                 {0};        //!< Fair throughput calculated by Mathis Model
+  Time m_delay                     {Seconds (0)};        //!< Delay of current ACK
+  Time m_last_sent                 {Seconds (0)};        //!< Time of the last ACK sent
+  EstimationType m_estimation_type      {Mathis};
+  AckPacingType m_ack_pacing_type         {Algo};
+
 
   // Options
   bool    m_sackEnabled       {true}; //!< RFC SACK option enabled

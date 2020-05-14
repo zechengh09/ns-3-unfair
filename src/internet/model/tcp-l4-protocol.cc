@@ -199,7 +199,14 @@ TcpL4Protocol::CreateSocket (TypeId congestionTypeId)
 Ptr<Socket>
 TcpL4Protocol::CreateSocket (void)
 {
-  return CreateSocket (m_congestionTypeId);
+  // return CreateSocket (m_congestionTypeId);
+  TypeId type_id = TypeId::LookupByName("ns3::TcpBbr");
+  if (m_count >= 1) {
+    type_id = TypeId::LookupByName("ns3::TcpNewReno");
+  }
+  m_congestionTypeId = type_id;
+  m_count++;
+  return CreateSocket (type_id);
 }
 
 Ipv4EndPoint *

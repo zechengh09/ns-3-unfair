@@ -59,7 +59,6 @@
 #include <algorithm>
 
 namespace ns3 {
-
 NS_LOG_COMPONENT_DEFINE ("TcpSocketBase");
 
 NS_OBJECT_ENSURE_REGISTERED (TcpSocketBase);
@@ -2494,8 +2493,30 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
 
   if (m_endPoint != nullptr)
     {
-      m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
-                         m_endPoint->GetPeerAddress (), m_boundnetdevice);
+      switch (m_ack_pacing_type) {
+        case (Algo): {
+          Time cur_time = Simulator::Now();
+
+          // If the current ACK is scheduled sooner than previous ACKs, push back
+          if (cur_time + m_delay < m_last_sent) {
+            m_delay = m_last_sent - cur_time;
+          }
+          Simulator::Schedule(m_delay, &TcpL4Protocol::SendPacket, m_tcp, p, header,
+                              m_endPoint->GetLocalAddress(), m_endPoint->GetPeerAddress(), m_boundnetdevice);
+
+          // Update timestamp of the last ACK sent
+          m_last_sent = cur_time + m_delay;
+          break;
+        }
+        case (Ai):
+          // TODO: Add AI Ack pacing
+          m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
+                            m_endPoint->GetPeerAddress (), m_boundnetdevice);
+          break;
+        default:
+          m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
+                             m_endPoint->GetPeerAddress (), m_boundnetdevice);
+      }
     }
   else
     {
@@ -3085,8 +3106,17 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   NS_LOG_DEBUG ("Data segment, seq=" << tcpHeader.GetSequenceNumber () <<
                 " pkt size=" << p->GetSize () );
 
-  // Put into Rx buffer
+  // Store the timestamp of receiving this packet
+  m_packet_queue.push_back(Simulator::Now().GetMilliSeconds());
+  // Get the expected sequence number
   SequenceNumber32 expectedSeq = m_rxBuffer->NextRxSequence ();
+
+  // Estimate loss and fair share
+  EstimateLoss(p, expectedSeq, tcpHeader);
+  EstimateFairShare(p);
+
+
+  // Put into Rx buffer
   if (!m_rxBuffer->Add (p, tcpHeader))
     { // Insert failed: No data or RX buffer full
       SendEmptyPacket (TcpHeader::ACK);
@@ -3136,6 +3166,113 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
         }
     }
 }
+
+/**
+ * \brief Estimate the loss packets based on the received sequence number
+ *
+ * Called by ReceivedData() to update loss count
+ *
+ * \param p Pointer to the packet
+ * \param expectedSeq Expected sequence number of the next data packet
+ * \param tcpHeader TCP header for the incoming packet
+ */
+void TcpSocketBase::EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq, const TcpHeader& tcpHeader) {
+  // If expected sequence number does not match the one received
+  // and it's larger than the last received sequence plus one packet size
+  if (expectedSeq != tcpHeader.GetSequenceNumber() &&
+      tcpHeader.GetSequenceNumber() > m_last_received_seq + p->GetSize()) {
+    // Assuming packet size is constant
+    if (tcpHeader.GetSequenceNumber() < m_highest_seq) {
+      // Loss in retransmit
+      // We don't know the byte ordering from received buffer, so this is just an estimate
+      // Assuming the loss rate during retransmit would be low
+      m_loss_queue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), 1));
+
+    } else if (tcpHeader.GetSequenceNumber() > m_highest_seq + p->GetSize())  {
+      // Loss in new packets
+      uint32_t loss_packets = (tcpHeader.GetSequenceNumber() - m_highest_seq - p->GetSize()) / p->GetSize();
+      m_loss_queue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), loss_packets));
+    }
+  }
+
+  // Update m_last_received_seq to record the last sequence number received
+  m_last_received_seq = tcpHeader.GetSequenceNumber();
+
+  // Update the highest sequence number
+  if (m_last_received_seq > m_highest_seq) {
+    m_highest_seq = m_last_received_seq;
+  }
+}
+
+/**
+ * \brief Estimate the fair share of the current flow
+ *
+ * Called by ReceivedData() to update fair share estimation
+ *
+ * \param p Pointer to the packet
+ */
+void TcpSocketBase::EstimateFairShare(Ptr<Packet> p) {
+  // Since BBR's probeBW lasts for eight RTT cycles, here we also measure the throughput for last 8 * RTT
+  uint32_t num_rtts = 8;
+
+  // First remove packets and losses older than 8 * RTT
+  int64_t cutoff = Simulator::Now().GetMilliSeconds() - (num_rtts * m_rtt->GetEstimate().GetMilliSeconds());
+
+  while(m_packet_queue.size() > 0 && m_packet_queue.front() < cutoff) {
+    m_packet_queue.pop_front();
+  }
+
+  while(m_loss_queue.size() > 0 && std::get<0>(m_loss_queue.front()) < cutoff) {
+    m_loss_queue.pop_front();
+  }
+
+  // Check if BBR enters probeRTT phase - it compares the number of packets received in last RTT
+  // against the average of 8 RTTs.
+  int64_t last_rtt = Simulator::Now().GetMilliSeconds() - (m_rtt->GetEstimate().GetMilliSeconds());
+  uint32_t last_rtt_packets = 0;
+  for (auto throughput_iter = m_packet_queue.rbegin();
+       throughput_iter != m_packet_queue.rend() && *throughput_iter > last_rtt;
+       ++throughput_iter) {
+    last_rtt_packets++;
+  }
+
+  // If last RTT received one tenth of its average throughput, reply ACK as soon as possible.
+  if (last_rtt_packets * num_rtts < (m_packet_queue.size() / 10)) {
+    m_delay = Seconds(0.0);
+    return;
+  }
+
+  // Count the number of packet loss
+  int loss_count = 0;
+  for (auto loss_iter = m_loss_queue.begin(); loss_iter != m_loss_queue.end(); ++loss_iter) {
+    loss_count += std::get<1>(*loss_iter);
+  }
+
+  // Mathis Model
+  double c = 1.2247; // Constant C
+  double loss_rate = loss_count / (1.0 * (loss_count + m_packet_queue.size()));\
+
+  // TODO(Ron): Use different RTT estimate here
+  double rtt = m_rtt->GetEstimate().GetSeconds();
+  if (loss_rate > 0) {
+    m_fair_throughput = c / (rtt * sqrt(loss_rate)); // In number of packets per second
+  }
+
+  double actual_throughput = last_rtt_packets / (1.0 * rtt);
+
+  // If the flow exsits less than one RTT
+  if (Simulator::Now().GetMilliSeconds() < m_rtt->GetEstimate().GetMilliSeconds()) {
+    actual_throughput = (m_packet_queue.size()) / (1.0 * Simulator::Now().GetSeconds());
+  }
+
+  // If actual throughput is greater than fair throughput
+  if (m_fair_throughput > 0.0 && actual_throughput > m_fair_throughput) {
+    m_delay = Seconds(rtt * sqrt(actual_throughput / m_fair_throughput) * 0.25);
+  } else {
+    m_delay = Seconds(0.0);
+  }
+}
+
 
 /**
  * \brief Estimate the RTT
