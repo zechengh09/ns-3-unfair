@@ -30,7 +30,7 @@ using namespace ns3;
 #define ENABLE_PCAP      false     // Set to "true" to enable pcap
 #define ENABLE_TRACE     false     // Set to "true" to enable trace
 #define BIG_QUEUE        2000      // Packets
-#define QUEUE_SIZE       1600      // Packets
+#define QUEUE_SIZE       1000      // Packets
 #define START_TIME       0.0       // Seconds
 #define STOP_TIME        240.0       // Seconds
 #define S_TO_R_BW        "100Mbps" // Server to router
