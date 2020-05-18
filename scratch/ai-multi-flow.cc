@@ -108,79 +108,9 @@ double f_max_in = 0;
 double o_min_in = 0;
 double o_max_in = 0;
 
-void read_scale_params(const std::string& filename) {
-    std::ifstream file(filename);
-    std::string str((std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
-    std::regex re("(.+),(.+),(.+),(.+)");
-    std::smatch match;
-    auto good = std::regex_search(str, match, re);
-    assert(good);
-    assert(match.size() == 5);
-    f_min_in = stod(match[1]);
-    f_max_in = stod(match[2]);
-    o_min_in = stod(match[3]);
-    o_max_in = stod(match[4]);
-}
-
-double do_scale(double x, double x_min_in, double x_max_in, double x_min_out, double x_max_out) {
-    return x_min_out +
-        (x - x_min_in) * (x_max_out - x_min_out) / (x_max_in - x_min_in);
-}
-
-double scale(double x) {
-    return do_scale(x, f_min_in, f_max_in, 0, 1);
-}
-
-double unscale(double x) {
-    return do_scale(x,  0, 1, o_min_in, o_max_in);
-}
 
 /////////////////////////////////////////////////
 std::vector<Ptr<PacketSink>> sinks;
-
-void updateAckPeriod (torch::jit::script::Module* net) {
-  if (USE_ATTAINED_TPUT) {
-      double total_tput = 0;
-      for (auto& sink : sinks) {
-          total_tput += sink->getBbrStats().tputMbps;
-      }
-      targetTputMbps = total_tput / sinks.size();
-  }
-
-  std::vector<torch::jit::IValue> input{};
-  // The net takes (current throughput (Gbps), target throughput (Gbps), RTT (ss))
-  // dummy.push_back(torch::tensor({stats.tputMbps/1e3, targetTputMbps/1e3, stats.avgLat.GetSeconds()*2.}));
-
-
-  auto target = scale(targetTputMbps*1e6);
-  input.push_back(torch::tensor({target}));
-
-  auto periodTensor = net->forward(input).toTensor();
-
-  // periodTensor.print();
-  // Returns ack period (s)
-  auto output = periodTensor.item().to<double>();
-
-  printf("Raw output: %f, unscaled: %f\n", output, unscale(output));
-  auto newPeriod = MicroSeconds (1./unscale(output));
-
-  for (auto& sink : sinks) {
-      // if (!sink->recvBbr()) { continue; }
-      assert(sink->getSockets().size() == 1);
-      auto sock = DynamicCast<ns3::TcpSocketBase>(sink->getSockets().front());
-      assert(sock);
-      auto stats = sink->getBbrStats();
-      if (stats.tputMbps < (1.2 * targetTputMbps)) {
-          sock->SetAckPeriod (Seconds (0));
-          continue;
-      }
-    
-      printf("Stats: tput (Gb/s): %f, RTT (s) %f; newPeriod (s): %.20f, target: %f Mbps\n", stats.tputMbps/1e3, stats.avgLat.GetSeconds()*2., newPeriod.GetSeconds(), targetTputMbps);
-      sock->SetAckPeriod (newPeriod);
-  }
-  Simulator::Schedule( MicroSeconds(recalcUS), updateAckPeriod, net);
-}
 
 
 
@@ -227,16 +157,8 @@ int main (int argc, char *argv[])
   cmd.AddValue ("use_reno", "Use reno (else cubic)", useReno);
   cmd.Parse (argc, argv);
 
-  read_scale_params(scale_params_file);
 
-  torch::jit::script::Module net;
-  try {
-      net = torch::jit::load(mdl_flp);
-  } catch (const c10::Error& e) {
-      // fprintf(stderr, "Error loading model %s\n", mdl_flp.c_str());
-      fprintf(stderr, "Error loading model %s: %s\n", mdl_flp.c_str(), e.what());
-      return 1;
-  }
+
 
 
   Config::SetDefault ("ns3::PacketSink::maxBbrRecords", UintegerValue (1000));
@@ -403,8 +325,6 @@ int main (int argc, char *argv[])
     pcap_name << out_dir << "/" << details;
     p2p.EnablePcapAll (pcap_name.str (), true);
   }
-
-  Simulator::Schedule( Seconds (warmup_s), updateAckPeriod, &net);
 
   Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), printBbrStats);
 

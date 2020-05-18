@@ -350,7 +350,7 @@ TcpSocketBase::TcpSocketBase (void)
   ok = m_tcb->TraceConnectWithoutContext ("RTT",
                                           MakeCallback (&TcpSocketBase::UpdateRtt, this));
   NS_ASSERT (ok == true);
-    tcpSocketBases.insert(this);
+  tcpSocketBases.insert(this);
 }
 
 TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
@@ -404,7 +404,7 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
     m_prevAck (sock.m_prevAck),
     m_sendBbr (sock.m_sendBbr),
     m_recvBbr (sock.m_recvBbr),
-    m_model (sock.m_model)
+    m_modelName (sock.m_modelName)
     // Don't copy pendingAcks - don't want duplciate acks
 {
   NS_LOG_FUNCTION (this);
@@ -2520,32 +2520,8 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
     {
       if (flags & TcpHeader::ACK)
         {
-          // If this packet is an ACK...
-          switch (m_ack_pacing_type) {
-          case (Algo): {
-            Time cur_time = Simulator::Now ();
-
-            // If the current ACK is scheduled sooner than previous ACKs, push back
-            if (cur_time + m_delay < m_last_sent) {
-              m_delay = m_last_sent - cur_time;
-            }
-            Simulator::Schedule (m_delay, &TcpL4Protocol::SendPacket, m_tcp, p,
-                                 header, m_endPoint->GetLocalAddress (),
-                                 m_endPoint->GetPeerAddress (),
-                                 m_boundnetdevice);
-
-            // Update timestamp of the last ACK sent
-            m_last_sent = cur_time + m_delay;
-            break;
-          }
-          case (Ai):
-            ScheduleAckPacket (m_tcp, p, header, m_endPoint->GetLocalAddress (),
-                               m_endPoint->GetPeerAddress (), m_boundnetdevice);
-            break;
-          default:
-            m_tcp->SendPacket (p, header, m_endPoint->GetLocalAddress (),
-                               m_endPoint->GetPeerAddress (), m_boundnetdevice);
-          }
+          ScheduleAckPacket (m_tcp, p, header, m_endPoint->GetLocalAddress (),
+                             m_endPoint->GetPeerAddress (), m_boundnetdevice);
         }
       else
         {
@@ -3141,22 +3117,8 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   NS_LOG_DEBUG ("Data segment, seq=" << tcpHeader.GetSequenceNumber () <<
                 " pkt size=" << p->GetSize () );
 
-  // Store the timestamp of receiving this packet
-  m_packet_queue.push_back(Simulator::Now().GetMilliSeconds());
-  // Get the expected sequence number
-  SequenceNumber32 expectedSeq = m_rxBuffer->NextRxSequence ();
-
-  // Store the timestamp of receiving this packet
-  m_packet_queue.push_back(Simulator::Now().GetMilliSeconds());
-
-  EstimateLoss(p, expectedSeq, tcpHeader);
-  EstimateFairShare(p);
-
-  BbrTag tag;
-  auto good = p->FindFirstMatchingByteTag(tag);
-  assert(good);
-  m_recvBbr = tag.isBbr;
-
+  Unfair(p);
+ 
   // Put into Rx buffer
   if (!m_rxBuffer->Add (p, tcpHeader))
     { // Insert failed: No data or RX buffer full
@@ -3207,113 +3169,6 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
         }
     }
 }
-
-/**
- * \brief Estimate the loss packets based on the received sequence number
- *
- * Called by ReceivedData() to update loss count
- *
- * \param p Pointer to the packet
- * \param expectedSeq Expected sequence number of the next data packet
- * \param tcpHeader TCP header for the incoming packet
- */
-void TcpSocketBase::EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq, const TcpHeader& tcpHeader) {
-  // If expected sequence number does not match the one received
-  // and it's larger than the last received sequence plus one packet size
-  if (expectedSeq != tcpHeader.GetSequenceNumber() &&
-      tcpHeader.GetSequenceNumber() > m_last_received_seq + p->GetSize()) {
-    // Assuming packet size is constant
-    if (tcpHeader.GetSequenceNumber() < m_highest_seq) {
-      // Loss in retransmit
-      // We don't know the byte ordering from received buffer, so this is just an estimate
-      // Assuming the loss rate during retransmit would be low
-      m_loss_queue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), 1));
-
-    } else if (tcpHeader.GetSequenceNumber() > m_highest_seq + p->GetSize())  {
-      // Loss in new packets
-      uint32_t loss_packets = (tcpHeader.GetSequenceNumber() - m_highest_seq - p->GetSize()) / p->GetSize();
-      m_loss_queue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), loss_packets));
-    }
-  }
-
-  // Update m_last_received_seq to record the last sequence number received
-  m_last_received_seq = tcpHeader.GetSequenceNumber();
-
-  // Update the highest sequence number
-  if (m_last_received_seq > m_highest_seq) {
-    m_highest_seq = m_last_received_seq;
-  }
-}
-
-/**
- * \brief Estimate the fair share of the current flow
- *
- * Called by ReceivedData() to update fair share estimation
- *
- * \param p Pointer to the packet
- */
-void TcpSocketBase::EstimateFairShare(Ptr<Packet> p) {
-  // Since BBR's probeBW lasts for eight RTT cycles, here we also measure the throughput for last 8 * RTT
-  uint32_t num_rtts = 8;
-
-  // First remove packets and losses older than 8 * RTT
-  int64_t cutoff = Simulator::Now().GetMilliSeconds() - (num_rtts * m_rtt->GetEstimate().GetMilliSeconds());
-
-  while(m_packet_queue.size() > 0 && m_packet_queue.front() < cutoff) {
-    m_packet_queue.pop_front();
-  }
-
-  while(m_loss_queue.size() > 0 && std::get<0>(m_loss_queue.front()) < cutoff) {
-    m_loss_queue.pop_front();
-  }
-
-  // Check if BBR enters probeRTT phase - it compares the number of packets received in last RTT
-  // against the average of 8 RTTs.
-  int64_t last_rtt = Simulator::Now().GetMilliSeconds() - (m_rtt->GetEstimate().GetMilliSeconds());
-  uint32_t last_rtt_packets = 0;
-  for (auto throughput_iter = m_packet_queue.rbegin();
-       throughput_iter != m_packet_queue.rend() && *throughput_iter > last_rtt;
-       ++throughput_iter) {
-    last_rtt_packets++;
-  }
-
-  // If last RTT received one tenth of its average throughput, reply ACK as soon as possible.
-  if (last_rtt_packets * num_rtts < (m_packet_queue.size() / 10)) {
-    m_delay = Seconds(0.0);
-    return;
-  }
-
-  // Count the number of packet loss
-  int loss_count = 0;
-  for (auto loss_iter = m_loss_queue.begin(); loss_iter != m_loss_queue.end(); ++loss_iter) {
-    loss_count += std::get<1>(*loss_iter);
-  }
-
-  // Mathis Model
-  double c = 1.2247; // Constant C
-  double loss_rate = loss_count / (1.0 * (loss_count + m_packet_queue.size()));\
-
-  // TODO(Ron): Use different RTT estimate here
-  double rtt = m_rtt->GetEstimate().GetSeconds();
-  if (loss_rate > 0) {
-    m_fair_throughput = c / (rtt * sqrt(loss_rate)); // In number of packets per second
-  }
-
-  double actual_throughput = last_rtt_packets / (1.0 * rtt);
-
-  // If the flow exsits less than one RTT
-  if (Simulator::Now().GetMilliSeconds() < m_rtt->GetEstimate().GetMilliSeconds()) {
-    actual_throughput = (m_packet_queue.size()) / (1.0 * Simulator::Now().GetSeconds());
-  }
-
-  // If actual throughput is greater than fair throughput
-  if (m_fair_throughput > 0.0 && actual_throughput > m_fair_throughput) {
-    m_delay = Seconds(rtt * sqrt(actual_throughput / m_fair_throughput) * 0.25);
-  } else {
-    m_delay = Seconds(0.0);
-  }
-}
-
 
 /**
  * \brief Estimate the RTT
@@ -4179,54 +4034,6 @@ TcpSocketBase::NotifyPacingPerformed (void)
   SendPendingData (m_connected);
 }
 
-void
-TcpSocketBase::ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
-                                  TcpHeader header, Ipv4Address localaddr,
-                                  Ipv4Address peeraddr,
-                                  Ptr<NetDevice> boundnetdevice)
-{
-    if (!m_recvBbr || m_ackPeriod == 0 || m_prevAck + m_ackPeriod < Simulator::Now ())
-    {
-      if (!m_pendingAcks.empty()) {
-          fprintf(stderr, "m_pendingAcks should be empty\n");
-      }
-      // assert(m_pendingAcks.empty());
-      m_prevAck = Simulator::Now ();
-      tcp->SendPacket (p, header, localaddr, peeraddr, boundnetdevice);
-      return;
-    }
-
-    m_pendingAcks.push_back({tcp, p, header, localaddr, peeraddr, boundnetdevice});
-
-    if (m_pendingAcks.size() == 1)
-    {
-        ScheduleSendAck();
-    }
-}
-
-void
-TcpSocketBase::SendAck() {
-    assert(!m_pendingAcks.empty());
-    auto& pending = m_pendingAcks.front();
-
-    pending.tcp->SendPacket (pending.p, pending.header, pending.localaddr, pending.peeraddr, pending.boundnetdevice);
-    m_pendingAcks.pop_front();
-
-    m_prevAck = Simulator::Now ();
-
-    if (! m_pendingAcks.empty())
-    {
-        ScheduleSendAck();
-    }
-}
-
-void
-TcpSocketBase::ScheduleSendAck() {
-    auto delay = (m_prevAck + m_ackPeriod) - Simulator::Now ();
-    Simulator::Schedule(delay, &TcpSocketBase::SendAck, this);
-}
-
-
 //RttHistory methods
 RttHistory::RttHistory (SequenceNumber32 s, uint32_t c, Time t)
   : seq (s),
@@ -4242,6 +4049,314 @@ RttHistory::RttHistory (const RttHistory& h)
     time (h.time),
     retx (h.retx)
 {
+}
+
+
+// ACK pacing
+
+void
+TcpSocketBase::Unfair (Ptr<Packet> p) {
+  if (! m_unfairEnable) {
+    return;
+  }
+  
+  // Store the timestamp of receiving this packet
+  m_packetQueue.push_back(Simulator::Now().GetMilliSeconds());
+
+  BbrTag tag;
+  assert(p->FindFirstMatchingByteTag(tag));
+  m_recvBbr = tag.isBbr;
+
+  double fair_share;
+  switch (m_fairShareType) {
+  case Average:
+    fair_share = EstimateFairShareAverage ()
+    break;
+  default:
+    fair_share = EstimateFairShareCalc (p);
+  }
+  
+  double actualTput = 0;
+  // Ron version
+  // If the flow exsits less than one RTT
+  if (Simulator::Now () < m_rtt->GetEstimate()) {
+    actualTput = (m_packetQueue.size ()) / (1.0 * Simulator::Now ().GetSeconds ());
+  } else {
+    actualTput = lastRttPackets / (1.0 * rtt);
+  }
+  // Chris version
+  actualTput = sink->getBbrStats ().tputMbps;
+
+  // Do we want to do this?
+  if (actualTput < (1.2 * targetTputMbps)) {
+    SetAckPeriod (Seconds (0));
+    return
+  }
+
+  switch (m_ackPacingType) {
+  case Calc:
+    m_ackPeriod = EstimateAckPeriodCalc(actualTput, targetTput);
+  case Model:
+    m_ackPeriod = EstimateAckPeriodModel(targetTput);
+  default:
+    NS_LOG_ERROR ("Unknown fair share estimation type!");
+  }
+
+  NS_LOG_INFO ("tput (Mb/s): " << actualTput << 
+               ", RTT (s): " << stats.avgLat.GetSeconds () * 2 <<
+               ", newPeriod (s): " << m_ackPeriod.GetSecond () <<
+               ", target tput (Mb/s):" <<  targetTput);
+}
+
+/**
+ * \brief Estimate the loss packets based on the received sequence number
+ *
+ * Called by ReceivedData() to update loss count
+ *
+ * \param p Pointer to the packet
+ * \param expectedSeq Expected sequence number of the next data packet
+ * \param tcpHeader TCP header for the incoming packet
+ */
+void TcpSocketBase::EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq, const TcpHeader& tcpHeader) {
+  // If expected sequence number does not match the one received
+  // and it's larger than the last received sequence plus one packet size
+  if (expectedSeq != tcpHeader.GetSequenceNumber() &&
+      tcpHeader.GetSequenceNumber() > m_lastReceivedSeq + p->GetSize()) {
+    // Assuming packet size is constant
+    if (tcpHeader.GetSequenceNumber() < m_highestSeq) {
+      // Loss in retransmit
+      // We don't know the byte ordering from received buffer, so this is just an estimate
+      // Assuming the loss rate during retransmit would be low
+      m_lossQueue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), 1));
+
+    } else if (tcpHeader.GetSequenceNumber() > m_highestSeq + p->GetSize())  {
+      // Loss in new packets
+      uint32_t loss_packets = (tcpHeader.GetSequenceNumber() - m_highestSeq - p->GetSize()) / p->GetSize();
+      m_lossQueue.push_back(std::make_pair(Simulator::Now().GetMilliSeconds(), loss_packets));
+    }
+  }
+
+  // Update m_lastReceivedSeq to record the last sequence number received
+  m_lastReceivedSeq = tcpHeader.GetSequenceNumber();
+
+  // Update the highest sequence number
+  if (m_lastReceivedSeq > m_highestSeq) {
+    m_highestSeq = m_lastReceivedSeq;
+  }
+}
+
+double
+TcpSocketBase::EstimateFairShareCalc(Ptr<Packet> p) {
+  NS_LOG_ERROR ("Unknown fair share estimation type!");
+  
+  EstimateLoss (p, m_rxBuffer->NextRxSequence (), tcpHeader);
+  
+  // Since BBR's probeBW lasts for eight RTT cycles, here we also measure the throughput for last 8 * RTT
+  uint32_t num_rtts = 8;
+
+  // First remove packets and losses older than 8 * RTT
+  int64_t cutoff = Simulator::Now().GetMilliSeconds() - (num_rtts * m_rtt->GetEstimate().GetMilliSeconds());
+
+  while(m_packetQueue.size() > 0 && m_packetQueue.front() < cutoff) {
+    m_packetQueue.pop_front();
+  }
+
+  while(m_lossQueue.size() > 0 && std::get<0>(m_lossQueue.front()) < cutoff) {
+    m_lossQueue.pop_front();
+  }
+
+  // Check if BBR enters probeRTT phase - it compares the number of packets received in last RTT
+  // against the average of 8 RTTs.
+  int64_t last_rtt = Simulator::Now().GetMilliSeconds() - (m_rtt->GetEstimate().GetMilliSeconds());
+  uint32_t last_rtt_packets = 0;
+  for (auto throughput_iter = m_packetQueue.rbegin();
+       throughput_iter != m_packetQueue.rend() && *throughput_iter > last_rtt;
+       ++throughput_iter) {
+    last_rtt_packets++;
+  }
+
+  // If last RTT received one tenth of its average throughput, reply ACK as soon as possible.
+  if (last_rtt_packets * num_rtts < (m_packetQueue.size() / 10)) {
+    m_delay = Seconds(0.0);
+    return;
+  }
+
+  // Count the number of packet loss
+  int loss_count = 0;
+  for (auto loss_iter = m_lossQueue.begin(); loss_iter != m_lossQueue.end(); ++loss_iter) {
+    loss_count += std::get<1>(*loss_iter);
+  }
+
+  // Mathis Model
+  double c = 1.2247; // Constant C
+  double loss_rate = loss_count / (1.0 * (loss_count + m_packetQueue.size()));\
+
+  // TODO(Ron): Use different RTT estimate here
+  double rtt = m_rtt->GetEstimate().GetSeconds();
+  if (loss_rate > 0) {
+    m_fairThroughput = c / (rtt * sqrt(loss_rate)); // In number of packets per second
+  }
+
+  return fair_throughput;
+}
+
+double
+TcpSocketBase::EstimateFairShareAverage (Ptr<Packet> p) {
+  double totalTput = 0;
+  for (auto& sink : sinks) {
+    totalTput += sink->getBbrStats ().tputMbps;
+  }
+  return totalTput / sinks.size ();
+}
+
+double
+TcpSocketBase::EstimateAckPeriodCalc (double actualTput, double targetTput) {
+  return Seconds (rtt * sqrt (actualTput / targetTput) * 0.25);
+}
+
+double
+TcpSocketBase::EstimateAckPeriodModel (double target_tput) {
+  // std::vector<torch::jit::IValue> input ({scale(targetTputMbps * 1e6)});
+  // The net takes (current tput (Gbps), target tput (Gbps), RTT (ss))
+  // dummy.push_back(torch::tensor({stats.tputMbps/1e3, targetTputMbps/1e3, stats.avgLat.GetSeconds()*2.}));
+  //input.push_back(torch::tensor({target}));
+  // periodTensor.print();
+  // Returns ack period (s)
+  //auto output = periodTensor.item().to<double>();
+
+  // TODO: This scaling assumes a single input and output feature.
+  double out = m_net->forward (
+    {scale(targetTputMbps * 1e6, m_scaleParams[0][0], m_scaleParams[0][1], 0, 1)}
+    ).toTensor ().item ().to<double> ();
+  out_unscaled = scale(out, 0, 1, m_scaleParams[1][0], m_scaleParams[1][1]);
+  NS_LOG_INFO ("Raw output: " << out << ", unscaled: " << out_unscaled);
+  return MicroSeconds (1. / out_unscaled);
+}
+
+void
+TcpSocketBase::ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
+                                  TcpHeader header, Ipv4Address localaddr,
+                                  Ipv4Address peeraddr,
+                                  Ptr<NetDevice> boundnetdevice)
+{
+  // If the ACK period is 0 or the next time at which an ACK should be sent is
+  // in the past, then send the ACK immediately. Otherwise, enqueue it for
+  // tranmission later.
+  if (m_ackPeriod == 0 || m_prevAck + m_ackPeriod < Simulator::Now ())
+    {
+      // TODO: Debug why this assertion is sometimes invalid.
+      // assert(m_pendingAcks.empty());
+      if (!m_pendingAcks.empty()) {
+        NS_LOG_WARN ("m_pendingAcks should be empty!");
+      }
+      
+      SendAck (tcp, p, header, localaddr, peeraddr, boundnetdevice);
+    }
+  else
+    {
+      m_pendingAcks.push_back({
+          tcp, p, header, localaddr, peeraddr, boundnetdevice});
+      if (m_pendingAcks.size() == 1)
+        {
+          ScheduleSendPendingAck ();
+        }
+    }
+}
+
+void
+TcpSocketBase::ScheduleSendPendingAck () {
+    auto delay = (m_prevAck + m_ackPeriod) - Simulator::Now ();
+    assert(delay > 0);
+    Simulator::Schedule (delay, &TcpSocketBase::SendPendingAck, this);
+}
+
+void
+TcpSocketBase::SendPendingAck () {
+  assert(!m_pendingAcks.empty());
+  auto& ack = m_pendingAcks.front();
+  m_pendingAcks.pop_front();
+  
+  SendAck (ack.p, ack.header, ack.localaddr, ack.peeraddr, ack.boundnetdevice);
+  
+  if (! m_pendingAcks.empty ())
+    {
+      ScheduleSendPendingAck ();
+    }
+}
+
+void
+TcpSocketBase::SendAck (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p, TcpHeader header,
+                        Ipv4Address localaddr, Ipv4Address peeraddr,
+                        Ptr<NetDevice> boundnetdevice) {
+  // Assert that this packet is an ACK.
+  assert(header.GetFlags () & TcpHeader::ACK);
+  tcp->SendPacket (p, header, localaddr, peeraddr, boundnetdevice);
+  m_prevAck = Simulator::Now ();
+}
+ 
+double
+TcpSocketBase::Scale (double x, double min_in, double max_in, double min_out,
+                      double max_out) {
+  return min_out + (x - min_in) * (max_out - min_out) / (max_in - min_in);
+}
+
+std::tuple<std::vector<std::tuple<double>>,
+           std::vector<std::tuple<double>>>
+TcpSocketBase::ReadScaleParams (const std::string& flp) {
+      std::ifstream file(flp);
+      std::string str((std::istreambuf_iterator<char>(file)),
+          std::istreambuf_iterator<char>());
+      file.close();
+        
+      std::regex re("(.+),(.+),(.+),(.+)");
+      std::smatch match;
+      auto good = std::regex_search(str, match, re);
+      assert(good);
+      
+      assert(match.size() == 5);
+      return {
+        {{stod(match[1]), stod(match[2])}},
+        {{stod(match[3]), stod(match[4])}}
+      }
+}
+
+void
+TcpSocketBase::SetAckPeriod (Time period) {
+  m_ackPeriod = period;
+}
+
+Time
+TcpSocketBase::GetAckPeriod () const {
+  return m_ackPeriod;
+}
+
+void
+TcpSocketBase::SetModel (std::string modelName, modelFlp, scaleParamsFlp) {
+  m_modelName = modelName;
+
+  torch::jit::script::Module net;
+  try {
+      net = torch::jit::load(modelFlp);
+  } catch (const c10::Error& e) {
+    NS_LOG_ERROR ("Error loading model " << modelFlp << ":\n" << e.what());
+    return;
+  }
+
+  m_scaleParams = ReadScaleParams(scaleParamsFlp);
+}
+
+std::string
+TcpSocketBase::GetModel () const {
+  return m_modelName;
+}
+
+size_t
+TcpSocketBase::GetNumPendingAcks () const {
+  return m_pendingAcks.size();
+}
+
+bool TcpSocketBase::GetRecvBbr () const {
+  return m_recvBbr;
 }
 
 } // namespace ns3

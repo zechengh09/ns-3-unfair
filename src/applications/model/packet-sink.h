@@ -94,19 +94,20 @@ public:
    */
   std::list<Ptr<Socket> > GetAcceptedSockets (void) const;
  
+  // ACK pacing
   struct BbrStats {
-      double tputMbps;
-      Time avgLat;
+    double tputMbps;
+    Time avgLat;
   };
-
-  // (MB/s, avg latency
+  
+  // (Mb/s, avg latency)
   // Relies on the PacketSink accepting as much data from the Socket as possible
   //    or else the packets might be split, leading to the appearance duplicate 
   //    of duplicate packets
-  BbrStats getBbrStats () const;
-  bool recvBbr() const { return m_recvBbr; }
-  uint64_t GetTotalBbrPackets() const { return m_totalBbrPackets; }
-  std::list<Ptr<Socket>>& getSockets() { return m_socketList; }
+  BbrStats GetBbrStats () const;
+  bool RecvBbr () const { return m_recvBbr; }
+  uint64_t GetTotalBbrPackets () const { return m_totalBbrPackets; }
+  std::list<Ptr<Socket>>& GetSockets () { return m_socketList; }
 
 protected:
   virtual void DoDispose (void);
@@ -149,20 +150,20 @@ private:
   /// Traced Callback: received packets, source address.
   TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
 
-  uint32_t m_maxBbrRecords;
+  // ACK pacing
   struct BbrRecord {
-      Time sendTime;
-      Time recvTime;
-      uint64_t bytes;
+    Time sendTime;
+    Time recvTime;
+    uint64_t bytes;
   };
   std::deque<BbrRecord> m_bbrRecords;
-  uint64_t m_totalBbrPackets = 0;
-  bool m_recvBbr = false;
+  uint32_t m_maxBbrRecords       {0};
+  uint64_t m_totalBbrPackets     {0};
+  bool m_recvBbr             {false};
 
-  void updateBbrRecord(Ptr<Packet>& packet);
-  void SetMaxBbrRecords(uint32_t m) { m_maxBbrRecords = m; }
+  void UpdateBbrRecord (Ptr<Packet>& packet);
+  void SetMaxBbrRecords (uint32_t m) { m_maxBbrRecords = m; }
   uint32_t GetMaxBbrRecords () const { return m_maxBbrRecords; }
-
 };
 
 } // namespace ns3

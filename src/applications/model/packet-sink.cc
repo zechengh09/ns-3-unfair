@@ -182,7 +182,9 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
           break;
         }
       m_totalRx += packet->GetSize ();
-      updateBbrRecord(packet);
+      
+      UpdateBbrRecord(packet);
+      
       if (InetSocketAddress::IsMatchingType (from))
         {
           NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
@@ -205,38 +207,39 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
     }
 }
 
-void PacketSink::updateBbrRecord(Ptr<Packet>& packet) {
-
+void PacketSink::UpdateBbrRecord(Ptr<Packet>& packet) {
     BbrTag tag;
     auto good = packet->FindFirstMatchingByteTag(tag);
     assert(good);
     m_recvBbr = tag.isBbr;
 
     ++m_totalBbrPackets;
-    m_bbrRecords.push_back({tag.sendTime, Simulator::Now (), packet->GetSize ()});
-    if (m_bbrRecords.size () > m_maxBbrRecords) {
+    m_bbrRecords.push_back({
+        tag.sendTime, Simulator::Now (), packet->GetSize ()});
+
+    // If adding this record caused the list of records to exceed the threshold,
+    // then remove the oldest record.
+    if (m_bbrRecords.size () > m_maxBbrRecords)
+      {
         m_bbrRecords.pop_front();
         assert(m_bbrRecords.size () == m_maxBbrRecords);
-    }
+      }
 }
 
-PacketSink::BbrStats PacketSink::getBbrStats () const {
+PacketSink::BbrStats PacketSink::GetBbrStats () const {
     assert(!m_bbrRecords.empty());
 
-    auto lat = Seconds (0);
+    Time lat = Seconds (0);
     uint64_t bytes = 0;
     for (auto& record : m_bbrRecords) {
         lat += record.recvTime - record.sendTime;
         bytes += record.bytes; 
     }
 
-    auto avgLat = Seconds (lat.GetSeconds() / m_bbrRecords.size());
-
-    auto epoch = Simulator::Now () - m_bbrRecords.front ().sendTime;
-    auto tput = bytes / epoch.GetSeconds();
-    tput *= 8;          // Convert to bits.
-    tput /= 1e6;  // Convert to Mb/s
-
+    // Mb/s
+    double tput = bytes / lat.GetSeconds () * 8 / 1e6;
+    // Seconds
+    Time avgLat = Seconds (lat.GetSeconds () / m_bbrRecords.size ());
     return {tput, avgLat};
 }
 

@@ -51,19 +51,6 @@ class TcpTxBuffer;
 class TcpOption;
 class Ipv4Interface;
 class Ipv6Interface;
-
-enum EstimationType {
-    Mathis,
-    Padhye,
-    TFRC
-};
-
-enum AckPacingType {
-    Algo,
-    Ai,
-    None
-};
-
   
 /**
  * \ingroup tcp
@@ -996,21 +983,6 @@ protected:
   virtual void ReceivedData (Ptr<Packet> packet, const TcpHeader& tcpHeader);
 
   /**
-   * \brief Estimate the loss packets based on the received sequence number
-   * \param p Pointer to the packet
-   * \param expectedSeq Expected sequence number of the next data packet
-   * \param tcpHeader TCP header for the incoming packet
-   */
-  virtual void EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq,
-                                            const TcpHeader& tcpHeader);
-
-  /**
-   * \brief Estimate the fair share of the current flow
-   * \param p Pointer to the packet
-   */
-  virtual void EstimateFairShare(Ptr<Packet> p);
-
-  /**
    * \brief Take into account the packet for RTT estimation
    * \param tcpHeader the packet's TCP header
    */
@@ -1268,18 +1240,6 @@ protected:
   TracedValue<SequenceNumber32> m_highRxMark {0};  //!< Highest seqno received
   TracedValue<SequenceNumber32> m_highRxAckMark {0}; //!< Highest ack received
 
-  // Ack Pacing
-  Time m_delay_start {Seconds(0.0)};
-  std::deque<std::pair<int64_t, uint32_t>> m_loss_queue; //!< Queue of loss packets - <Time, loss count>
-  std::deque<int64_t> m_packet_queue;                    //!< Queue of timestamp for received packets
-  SequenceNumber32 m_highest_seq             {0};        //!< Highest sequence number so far received
-  SequenceNumber32 m_last_received_seq       {0};        //!< Sequence number of the last received packet
-  uint32_t m_fair_throughput                 {0};        //!< Fair throughput calculated by Mathis Model
-  Time m_delay                     {Seconds (0)};        //!< Delay of current ACK
-  Time m_last_sent                 {Seconds (0)};        //!< Time of the last ACK sent
-  EstimationType m_estimation_type      {Mathis};
-  AckPacingType m_ack_pacing_type         {Algo};
-
   // Options
   bool    m_sackEnabled       {true}; //!< RFC SACK option enabled
   bool    m_winScalingEnabled {true}; //!< Window Scale option enabled (RFC 7323)
@@ -1317,17 +1277,20 @@ protected:
    */
   TracedValue<uint32_t> m_cWndInfl {0};
 
-  void ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
-                          TcpHeader header, Ipv4Address localaddr,
-                          Ipv4Address peeraddr, Ptr<NetDevice> boundnetdevice);
-  void SendAck ();
-  void ScheduleSendAck ();
 
-  Time m_ackPeriod;
-  Time m_prevAck;
-  bool m_sendBbr;
-  bool m_recvBbr;
-  std::string m_model;
+  // ACK pacing
+
+  enum FairShareEstimationType {
+    Mathis,
+    Padhye,
+    Average,
+    Model
+  };
+  
+  enum AckPacingType {
+    Calc,
+    Model,
+  };
 
   struct PendingAck {
     Ptr<TcpL4Protocol> tcp; 
@@ -1337,17 +1300,67 @@ protected:
     Ipv4Address peeraddr;
     Ptr<NetDevice> boundnetdevice;
   };
+
+
+  void Unfair (Ptr<Packet> p);
+  /**
+   * \brief Estimate the loss packets based on the received sequence number
+   * \param p Pointer to the packet
+   * \param expectedSeq Expected sequence number of the next data packet
+   * \param tcpHeader TCP header for the incoming packet
+   */
+  void EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq,
+                     const TcpHeader& tcpHeader);
+  /**
+   * \brief Estimate the fair share of the current flow
+   * \param p Pointer to the packet
+   */
+  double EstimateFairShareCalc (Ptr<Packet> p);
+  double EstimateFairShareAverage (Ptr<Packet> p);
+  double EstimateFairShareModel (Ptr<Packet> p);
+  double EstimateAckPeriodCalc (double actualTput, double targetTput);
+  double EstimateAckPeriodModel (double targetTput);
+  void ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
+                          TcpHeader header, Ipv4Address localaddr,
+                          Ipv4Address peeraddr, Ptr<NetDevice> boundnetdevice);
+  void ScheduleSendPendingAck ();
+  void SendPendingAck ();
+  void SendAck (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p, TcpHeader header,
+                Ipv4Address localaddr, Ipv4Address peeraddr,
+                Ptr<NetDevice> boundnetdevice);
+  static double Scale (double x, double minIn, double maxIn, double minOut,
+                       double maxOut);
+  static std::tuple<std::vector<std::tuple<double>>,
+             std::vector<std::tuple<double>>> ReadScaleParams (const std::string& flp);
+  
+  std::deque<std::pair<int64_t, uint32_t>> m_lossQueue;        //!< Queue of loss packets - <Time, loss count>
+  std::deque<int64_t> m_packetQueue;                           //!< Queue of timestamp for received packets
   std::deque<PendingAck> m_pendingAcks;
+  std::tuple<std::vector<std::tuple<double>>,
+             std::vector<std::tuple<double>>> m_scaleParams;
+  bool m_unfairEnable                      {false};
+  FairShareEstimationType m_fairShareType {Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
+  AckPacingType m_ackPacingType             {Calc};  //!< Which method of ACK pacing to use
+  SequenceNumber32 m_highestSeq                {0};  //!< Highest sequence number so far received
+  SequenceNumber32 m_lastReceivedSeq           {0};  //!< Sequence number of the last received packet
+  Time m_delayStart                  {Seconds (0)};  //!< Delay before ACK pacing is enabled
+  Time m_prevAck                     {Seconds (0)};
+  bool m_sendBbr                           {false};
+  bool m_recvBbr                           {false};
+  double m_fairThroughput                      {0};  //!< Fair throughput calculated by Mathis Model
+  Time m_ackPeriod                   {Seconds (0)};
+  std::string m_modelName                     {""};
+  torch::jit::script::Module m_net       {nullptr};
 
 public:
 
-  void SetAckPeriod (Time period) { m_ackPeriod = period; }
-  Time GetAckPeriod () const { return m_ackPeriod; }
-  void SetModel (std::string model) { m_model = model; }
-  std::string GetModel () const { return m_model; }
-  size_t getNumPendingAcks() const { return m_pendingAcks.size(); }
-  bool recvBbr() const { return m_recvBbr; }
-
+  void SetAckPeriod (Time period) const;
+  Time GetAckPeriod () const;
+  void SetModel (std::string modelName, std::string modelFlp,
+                 std::string scaleParamsFlp) const;
+  std::string GetModel () const;
+  size_t GetNumPendingAcks () const;
+  bool GetRecvBbr () const;
 };
 
 /**
