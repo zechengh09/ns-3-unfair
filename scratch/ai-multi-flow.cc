@@ -36,18 +36,17 @@
 using namespace ns3;
 
 // Constants.
-#define ENABLE_TRACE     false     // Set to "true" to enable trace
-#define START_TIME       0.0       // Seconds
-#define S_PORT           911       // Well-known port for server
-#define PACKET_SIZE      1380      // Bytes; Assumes 60 bytes for the IP header
-                                   // (20 bytes + up to 40 bytes for options)
-                                   // and a maximum of 60 bytes for the TCP
-                                   // header (20 bytes + up to 40 bytes for
-                                   // options).
-#define MTU              1500      // Bytes
-#define PCAP_LEN         200       // Bytes
+#define ENABLE_TRACE     false  // Set to "true" to enable trace
+#define START_TIME       0.0    // Seconds
+#define S_PORT           911    // Well-known port for server
+#define PACKET_SIZE      1380   // Bytes; Assumes 60 bytes for the IP header
+                                // (20 bytes + up to 40 bytes for options)
+                                // and a maximum of 60 bytes for the TCP
+                                // header (20 bytes + up to 40 bytes for
+                                // options).
+#define MTU              1500   // Bytes
+#define PCAP_LEN         200    // Bytes
 
-// Uncomment one of the below.
 #define TCP_PROTOCOL     "ns3::TcpBbr"
 // #define TCP_PROTOCOL     "ns3::TcpNewReno"
 // #define TCP_PROTOCOL     "ns3::TcpCubic"
@@ -55,79 +54,49 @@ using namespace ns3;
 // For logging.
 NS_LOG_COMPONENT_DEFINE ("main");
 
-const int BBR_PRINT_PERIOD = 2; // sec
-const bool USE_ATTAINED_TPUT = true;
-/////////////////////////////////////////////////
+const int BBR_PRINT_PERIOD = 2;  // sec
 
+std::vector<Ptr<PacketSink>> sinks;
 extern std::unordered_set<ns3::TcpSocketBase*> tcpSocketBases;
 extern bool useReno;
 
-/////////////////////////////////////////////////
 
-// Arguments read by functions
-double durS = 20;
-uint32_t recalcUS = 1<<30;
-double targetTputMbps = 0;
-
-/////////////////////////////////////////////////
-
-Ptr<PacketSink> createNewFlow(uint16_t port, Ipv4InterfaceContainer i1i2, NodeContainer nodes) {
-
-  BulkSendHelper source1("ns3::TcpSocketFactory",
-                         InetSocketAddress(i1i2.GetAddress(1), port));
+Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
+                           NodeContainer nodes, double durS, uint32_t recalcUs)
+{
+  // Source (at node 0).
+  BulkSendHelper src("ns3::TcpSocketFactory",
+                     InetSocketAddress(i1i2.GetAddress(1), port));
   // Set the amount of data to send in bytes (0 for unlimited).
-  source1.SetAttribute("MaxBytes", UintegerValue(0));
-  source1.SetAttribute("SendSize", UintegerValue(PACKET_SIZE));
-  ApplicationContainer apps1 = source1.Install(nodes.Get(0));
-  apps1.Start(Seconds(START_TIME));
-  apps1.Stop(Seconds(START_TIME+durS));
-
-  double random_start = 0.0;
-//  random_start = (rand() % 50) / 10.0;
+  src.SetAttribute ("MaxBytes", UintegerValue (0));
+  src.SetAttribute ("SendSize", UintegerValue (PACKET_SIZE));
+  ApplicationContainer srcApp = src.Install(nodes.Get(0));
+  srcApp.Start (Seconds (START_TIME));
+  srcApp.Stop (Seconds (START_TIME + durS));
 
   // Sink (at node 2).
-  PacketSinkHelper sink1("ns3::TcpSocketFactory",
-                         InetSocketAddress(Ipv4Address::GetAny(), port));
-  apps1 = sink1.Install(nodes.Get(2));
-  apps1.Start(Seconds(START_TIME + random_start));
-  apps1.Stop(Seconds(START_TIME+durS));
-  return DynamicCast<PacketSink> (apps1.Get(0)); // 4 stats
+  PacketSinkHelper sink ("ns3::TcpSocketFactory",
+                         InetSocketAddress (Ipv4Address::GetAny (), port));
+  ApplicationContainer sinkApp = sink.Install (nodes.Get (2));
+  sinkApp.Start (Seconds (START_TIME));
+  sinkApp.Stop (Seconds (START_TIME + durS));
+  return DynamicCast<PacketSink> (app.Get (0));
 }
 
 
-
-/////////////////////////////////////////////////
-
-// const double f_min_in = 1836972.2172854163;
-// const double f_max_in = 31411450.90160741;
-// const double o_min_in = 0.00016666666666666666;
-// const double o_max_in = 0.002857142857142857;
-
-double f_min_in = 0;
-double f_max_in = 0;
-double o_min_in = 0;
-double o_max_in = 0;
-
-
-/////////////////////////////////////////////////
-std::vector<Ptr<PacketSink>> sinks;
-
-
-
-void printBbrStats() {
+void PrintBbrStats()
+{
   for (auto& sink : sinks) {
-      auto stats = sink->getBbrStats();
-      std::cout << "BBR (" << Simulator::Now() << "): Throughput: " << stats.tputMbps << " Mb/s, Avg. Latency: " << stats.avgLat << "\n";
-
-      printf("pendingAcks: ");
+      auto stats = sink->getBbrStats ();
       assert(sink->getSockets().size() == 1);
-      auto sock = DynamicCast<ns3::TcpSocketBase>(sink->getSockets().front());
-      if (!sock->recvBbr()) { continue; }
-      printf("%zu; ", sock->getNumPendingAcks());
-      printf("\n");
+      NS_LOG_INFO(Simulator::Now() << " - throughput: " <<
+                  stats.tputMbps << " Mb/s, average latency: " <<
+                  stats.avgLat << ", pending ACKs: " <<
+                  DynamicCast<ns3::TcpSocketBase> (sink->getSockets ().front ())->GetNumPendingAcks ());
   }
-  Simulator::Schedule( Seconds(BBR_PRINT_PERIOD), printBbrStats);
+  Simulator::Schedule( Seconds(BBR_PRINT_PERIOD), PrintBbrStats);
 }
+
 
 int main (int argc, char *argv[])
 {
@@ -135,46 +104,40 @@ int main (int argc, char *argv[])
   double bwMbps = 10;
   double delUs = 5000;
   uint32_t que = 100;
-  double warmup_s = 5;
+  double durS = 20;
+  uint32_t recalcUS = 1<<30;
+  double warmupS = 5;
   bool pcap = false;
-  std::string mdl_flp = "";
-  std::string out_dir = ".";
-  std::string scale_params_file = "";
-  uint32_t num_other_flows = 0;
+  std::string modelFlp = "";
+  std::string outDir = ".";
+  std::string scaleParamsFlp = "";
+  uint32_t unfairFlows = 1;
+  uint32_t otherFlows = 0;
 
   CommandLine cmd;
   cmd.AddValue ("bandwidth_Mbps", "Bandwidth for both links (Mbps).", bwMbps);
   cmd.AddValue ("delay_us", "Link delay (us). RTT is 4x this value.", delUs);
   cmd.AddValue ("queue_capacity_p", "Router queue size (packets).", que);
   cmd.AddValue ("experiment_duration_s", "Simulation duration (s).", durS);
-  cmd.AddValue ("recalc_us", "Between recalculating ack delay (us)", recalcUS);
-  cmd.AddValue ("warmup_s", "Time before delaying acs (s)", warmup_s);
+  cmd.AddValue ("recalc_us", "Between recalculating ACK delay (us)", recalcUS);
+  cmd.AddValue ("warmup_s", "Time before delaying ACKs (s)", warmupS);
   cmd.AddValue ("pcap", "Record a pcap trace from each port (true or false).", pcap);
-  cmd.AddValue ("model", "Path to the model file.", mdl_flp);
-  cmd.AddValue ("out_dir", "Directory in which to store output files.", out_dir);
-  cmd.AddValue ("scale_params_file", "CSV File with scaling parameters", scale_params_file);
-  cmd.AddValue ("num_other_flows", "Number of non BBR senders", num_other_flows);
-  cmd.AddValue ("use_reno", "Use reno (else cubic)", useReno);
+  cmd.AddValue ("model", "Path to the model file.", modelFlp);
+  cmd.AddValue ("out_dir", "Directory in which to store output files.", outDir);
+  cmd.AddValue ("scale_params", "Path to a CSV file containing scaling parameters.", scaleParamsFlp);
+  cmd.AddValue ("unfair_flows", "Number of BBR flows.", unfairFlows);
+  cmd.AddValue ("other_flows", "Number of non BBR flows.", otherFlows);
+  cmd.AddValue ("use_reno", "Use Reno (else Cubic).", useReno);
   cmd.Parse (argc, argv);
 
-
-
-
-
-  Config::SetDefault ("ns3::PacketSink::maxBbrRecords", UintegerValue (1000));
-
-  targetTputMbps = bwMbps / (num_other_flows + 1);
-
   uint32_t rttUs = delUs * 4;
-  std::stringstream bw_ss;
-  bw_ss << bwMbps << "Mbps";
-  std::string bw = bw_ss.str ();
-  std::stringstream del_ss;
-  del_ss << delUs << "us";
-  std::string del = del_ss.str ();
+  std::stringstream bwSs;
+  bwSs << bwMbps << "Mbps";
+  std::string bw = bwSs.str ();
+  std::stringstream delSs;
+  delSs << delUs << "us";
+  std::string del = delSs.str ();
 
-
-  // auto routerToDeviceBW = bwMbps*0.9;
   auto routerToDeviceBW = bwMbps;
   std::stringstream sndSS;
   sndSS << routerToDeviceBW << "Mbps";
@@ -195,13 +158,13 @@ int main (int argc, char *argv[])
   std::cout << "RTT (us): " << rttUs << "\n";
   std::cout << "Packet size (bytes): " << PACKET_SIZE << "\n";
   std::cout << "Router queue size (packets): "<< que << "\n";
-  std::cout << "Warmup (s): " << warmup_s << "\n";
+  std::cout << "Warmup (s): " << warmupS << "\n";
   std::cout << "Duration (s): " << durS << "\n";
-  std::cout << "Target Throughput (Mbps): " << targetTputMbps << "\n";
   std::cout << "\n";
 
   /////////////////////////////////////////
   // Configure parameters.
+  NS_LOG_INFO ("Setting configuration parameters.");
   ConfigStore config;
   config.ConfigureDefaults ();
   // Select which TCP variant to use.
@@ -209,17 +172,18 @@ int main (int argc, char *argv[])
                       StringValue (TCP_PROTOCOL));
   // Set the segment size (otherwise, ns-3's default is 536).
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (PACKET_SIZE));
-
-  // Turn off delayed ack (so that every packet results in an ACK).
-  // Note: BBR' still works without this.
+  // Turn off delayed ACKs (so that every packet results in an ACK).
+  // Note: BBR still works without this.
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (0));
   // Increase the capacity of the send and receive buffers to make sure that the
   // experiment is not application-limited.
-  // Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (262144));
   Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1'000'000u));
   Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1'000'000u));
   // updateAckPeriod (MicroSeconds(0));
   Config::SetDefault ("ns3::TcpSocketBase::AckPeriod", TimeValue (MicroSeconds (0)));
+  Config::SetDefault ("ns3::PacketSink::maxBbrRecords", UintegerValue (1000));
+  // Configure TcpSocketBase with the model filepath.
+  Config::SetDefault ("ns3::TcpSocketBase::Model", StringValue (modelFlp));
 
   /////////////////////////////////////////
   // Create nodes.
@@ -230,30 +194,28 @@ int main (int argc, char *argv[])
   /////////////////////////////////////////
   // Create channels.
   NS_LOG_INFO ("Creating channels.");
-  NodeContainer n0_to_r = NodeContainer (nodes.Get (0), nodes.Get (1));
-  NodeContainer r_to_n1 = NodeContainer (nodes.Get (1), nodes.Get (2));
+  NodeContainer n0Ton1 = NodeContainer (nodes.Get (0), nodes.Get (1));
+  NodeContainer n1Ton2 = NodeContainer (nodes.Get (1), nodes.Get (2));
 
   /////////////////////////////////////////
   // Create links.
   NS_LOG_INFO ("Creating links.");
 
   // Server to Router.
-  PointToPointHelper p2p(PCAP_LEN);
-  // p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
+  PointToPointHelper p2p (PCAP_LEN);
   p2p.SetDeviceAttribute ("DataRate", StringValue ("10Gbps"));
   p2p.SetChannelAttribute ("Delay", StringValue (del));
   p2p.SetDeviceAttribute ("Mtu", UintegerValue (MTU));
-  NetDeviceContainer devices1 = p2p.Install (n0_to_r);
+  NetDeviceContainer devices1 = p2p.Install (n0Ton1);
 
   // Router to Client.
   p2p.SetDeviceAttribute ("DataRate", StringValue (routerToDeviceBWStr));
-  // p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
   p2p.SetChannelAttribute ("Delay", StringValue (del));
   p2p.SetDeviceAttribute ("Mtu", UintegerValue (MTU));
   p2p.SetQueue ("ns3::DropTailQueue",
                 "Mode", StringValue ("QUEUE_MODE_PACKETS"),
                 "MaxPackets", UintegerValue (que));
-  NetDeviceContainer devices2 = p2p.Install (r_to_n1);
+  NetDeviceContainer devices2 = p2p.Install (n1Ton2);
 
   /////////////////////////////////////////
   // Install Internet stack.
@@ -274,66 +236,43 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   /////////////////////////////////////////
-  // Create apps.
-  NS_LOG_INFO ("Creating applications.");
-  NS_LOG_INFO ("  Bulk send.");
-
-  // Source (at node 0).
-  BulkSendHelper source ("ns3::TcpSocketFactory",
-                         InetSocketAddress (i1i2.GetAddress (1), S_PORT));
-  // Set the amount of data to send in bytes (0 for unlimited).
-  source.SetAttribute ("MaxBytes", UintegerValue (0));
-  source.SetAttribute ("SendSize", UintegerValue (PACKET_SIZE));
-  ApplicationContainer apps = source.Install (nodes.Get (0));
-  apps.Start (Seconds (START_TIME));
-  apps.Stop (Seconds (durS));
-
-  // Sink (at node 2).
-  PacketSinkHelper sink ("ns3::TcpSocketFactory",
-                         InetSocketAddress (Ipv4Address::GetAny (), S_PORT));
-  apps = sink.Install (nodes.Get (2));
-  apps.Start (Seconds (START_TIME));
-  apps.Stop (Seconds (durS));
-  Ptr<PacketSink> p_sink = DynamicCast<PacketSink> (apps.Get (0)); // 4 stats
-  sinks.push_back(p_sink);
-
-  // Configure TcpSocketBase with the model filepath.
-  Config::SetDefault ("ns3::TcpSocketBase::Model", StringValue (mdl_flp));
-
+  // Create flows.
+  NS_LOG_INFO ("Creating flows.");
   uint32_t port = 101;
-  for (uint32_t i = 0; i < num_other_flows; ++i) {
-      Ptr<PacketSink> sink = createNewFlow(port + i, i1i2, nodes);
-      sinks.push_back(sink);
+  for (uint32_t i = 0; i < unfairFlows + otherFlows; ++i) {
+    sinks.push_back (CreateFlow (port + i, i1i2, nodes, durS, recalcUs));
   }
 
   /////////////////////////////////////////
   // Setup tracing (as appropriate).
-  std::stringstream details_ss;
-  // details_ss << ackPeriod << "us-" << delayToAckDelay << "s-" << bw << "-"
-  //            << rttUs << "us-" << durS << "s";
-  std::string details = details_ss.str ();
+  NS_LOG_INFO ("Configuring tracing.");
+  std::stringstream detailsSs;
+  detailsSs << ackPeriod << "us-" << delayToAckDelay << "s-" << bw << "-"
+             << rttUs << "us-" << durS << "s";
+  std::string details = detailsSs.str ();
+
   if (ENABLE_TRACE) {
     NS_LOG_INFO ("Enabling trace files.");
     AsciiTraceHelper ath;
-    std::stringstream trace_name;
-    trace_name << out_dir << "/trace-" << details << ".tr";
-    p2p.EnableAsciiAll (ath.CreateFileStream ("trace.tr"));
+    std::stringstream traceName;
+    traceName << outDir << "/trace-" << details << ".tr";
+    p2p.EnableAsciiAll (ath.CreateFileStream (traceName.str ()));
   }
   if (pcap) {
     NS_LOG_INFO ("Enabling pcap files.");
-    std::stringstream pcap_name;
-    pcap_name << out_dir << "/" << details;
-    p2p.EnablePcapAll (pcap_name.str (), true);
+    std::stringstream pcapName;
+    pcapName << outDir << "/" << details;
+    p2p.EnablePcapAll (pcapName.str (), true);
   }
 
-  Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), printBbrStats);
+  Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), PrintBbrStats);
 
   /////////////////////////////////////////
   // Run simulation.
-  std::chrono::time_point<std::chrono::steady_clock> start_time =
+  NS_LOG_INFO ("Running simulation.");
+  std::chrono::time_point<std::chrono::steady_clock> startTime =
     std::chrono::steady_clock::now ();
 
-  NS_LOG_INFO ("Running simulation.");
   Simulator::Stop (Seconds (durS));
   NS_LOG_INFO ("Simulation time: [" << START_TIME << "," << durS << "]");
   NS_LOG_INFO ("---------------- Start -----------------------");
@@ -341,44 +280,26 @@ int main (int argc, char *argv[])
   Simulator::Run ();
   NS_LOG_INFO ("---------------- Stop ------------------------");
 
-  std::chrono::time_point<std::chrono::steady_clock> stop_time =
+  std::chrono::time_point<std::chrono::steady_clock> stopTime =
     std::chrono::steady_clock::now ();
-  std::chrono::duration<double> diff = stop_time - start_time;
-  NS_LOG_INFO ("Real simulation time (s): " << diff.count ());
+  NS_LOG_INFO ("Real simulation time (s): " << (stopTime - startTime).count ());
 
   /////////////////////////////////////////
-  double total_throughput = 0;
-  double sum_sq = 0;
-  /*
-  double tput = p_sink->GetTotalRx() * 8 / durS / 1000000.0;
-  total_throughput += tput;
-  sum_sq += pow(tput, 2);
-  std::cout << "BBR Throughput: " << tput << " Mb/s\n";
-  for (auto& other : others) {
-      auto otherTput = other->GetTotalRx() * 8 / durS / 1000000.0;
-      total_throughput += otherTput;
-      sum_sq += pow(otherTput, 2);
-      std::cout << "Other Throughput: " << otherTput << " Mb/s\n";
-  }
-  */
-  for (auto& sink : sinks) {
-      auto tput = sink->GetTotalRx() * 8 / durS / 1000000.0;
-      total_throughput += tput;
-      sum_sq += pow(tput, 2);
-      std::cout << (sink->recvBbr() ? "Bbr" : "Other") << " Throughput: " << tput << " Mb/s\n";
-  }
+  // Calculate fairness.
+  NS_LOG_INFO ("Calculating fairness.");
 
-  std::cout << "Fairness: " << pow(total_throughput, 2) / (sinks.size() * sum_sq) << "\n";
-
-  // Output stats.
-  /*
-  NS_LOG_INFO ("Total bytes received: " << p_sink->GetTotalRx ());
-  double tput = p_sink->GetTotalRx () / (durS - START_TIME);
-  tput *= 8;          // Convert to bits.
-  tput /= 1000000.0;  // Convert to Mb/s
-  NS_LOG_INFO ("Throughput: " << tput << " Mb/s");
-  NS_LOG_INFO ("Done.");
-  */
+  double sumTput = 0;
+  double sumTputSq = 0;
+  for (auto& sink : sinks)
+    {
+      double tput = sink->GetTotalRx() * 8 / durS / 1000000.0;
+      sumTput += tput;
+      sumTputSq += pow(tput, 2);
+      NS_LOG_INFO ((sink->recvBbr() ? "Bbr" : "Other") << " - throughput: " <<
+                   tput << " Mb/s");
+    }
+  NS_LOG_INFO ("Jain's fairness index: " <<
+               pow(sumTput, 2) / (sinks.size() * sumTputSq));
 
   // Done.
   Simulator::Destroy ();

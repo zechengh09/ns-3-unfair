@@ -51,7 +51,7 @@ class TcpTxBuffer;
 class TcpOption;
 class Ipv4Interface;
 class Ipv6Interface;
-  
+
 /**
  * \ingroup tcp
  *
@@ -1286,16 +1286,16 @@ protected:
     Average,
     Model
   };
-  
+
   enum AckPacingType {
     Calc,
     Model,
   };
 
   struct PendingAck {
-    Ptr<TcpL4Protocol> tcp; 
+    Ptr<TcpL4Protocol> tcp;
     Ptr<Packet> p;
-    TcpHeader header; 
+    TcpHeader header;
     Ipv4Address localaddr;
     Ipv4Address peeraddr;
     Ptr<NetDevice> boundnetdevice;
@@ -1332,7 +1332,7 @@ protected:
                        double maxOut);
   static std::tuple<std::vector<std::tuple<double>>,
              std::vector<std::tuple<double>>> ReadScaleParams (const std::string& flp);
-  
+
   std::deque<std::pair<int64_t, uint32_t>> m_lossQueue;        //!< Queue of loss packets - <Time, loss count>
   std::deque<int64_t> m_packetQueue;                           //!< Queue of timestamp for received packets
   std::deque<PendingAck> m_pendingAcks;
