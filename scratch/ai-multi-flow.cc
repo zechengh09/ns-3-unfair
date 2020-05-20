@@ -57,7 +57,6 @@ NS_LOG_COMPONENT_DEFINE ("main");
 const int BBR_PRINT_PERIOD = 2;  // sec
 
 std::vector<Ptr<PacketSink>> sinks;
-extern std::unordered_set<ns3::TcpSocketBase*> tcpSocketBases;
 extern bool useReno;
 
 
@@ -74,13 +73,19 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
   srcApp.Start (Seconds (START_TIME));
   srcApp.Stop (Seconds (START_TIME + durS));
 
-  // Sink (at node 2).
-  PacketSinkHelper sink ("ns3::TcpSocketFactory",
+  // Destination (at node 2).
+  PacketSinkHelper dst ("ns3::TcpSocketFactory",
                          InetSocketAddress (Ipv4Address::GetAny (), port));
-  ApplicationContainer sinkApp = sink.Install (nodes.Get (2));
-  sinkApp.Start (Seconds (START_TIME));
-  sinkApp.Stop (Seconds (START_TIME + durS));
-  return DynamicCast<PacketSink> (app.Get (0));
+  ApplicationContainer dstApp = dst.Install (nodes.Get (2));
+  dstApp.Start (Seconds (START_TIME));
+  dstApp.Stop (Seconds (START_TIME + durS));
+
+
+  Ptr<PacketSink> sink = DynamicCast<PacketSink> (dstApp.Get (0));
+  ns3::TcpSocketBase sock = DynamicCast<ns3::TcpSocketBase> (
+    sink->getSockets ().front ());
+  sock->SetSink (sink);
+  return sink;
 }
 
 
@@ -171,7 +176,8 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpL4Protocol::SocketType",
                       StringValue (TCP_PROTOCOL));
   // Set the segment size (otherwise, ns-3's default is 536).
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (PACKET_SIZE));
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize",
+                      UintegerValue (PACKET_SIZE));
   // Turn off delayed ACKs (so that every packet results in an ACK).
   // Note: BBR still works without this.
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (0));
@@ -179,11 +185,19 @@ int main (int argc, char *argv[])
   // experiment is not application-limited.
   Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1'000'000u));
   Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1'000'000u));
-  // updateAckPeriod (MicroSeconds(0));
-  Config::SetDefault ("ns3::TcpSocketBase::AckPeriod", TimeValue (MicroSeconds (0)));
   Config::SetDefault ("ns3::PacketSink::maxBbrRecords", UintegerValue (1000));
   // Configure TcpSocketBase with the model filepath.
+  Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationEnable",
+                      BoolValue (true));
+  // updateAckPeriod (MicroSeconds(0));
+  Config::SetDefault ("ns3::TcpSocketBase::AckPeriod",
+                      TimeValue (MicroSeconds (0)));
+  // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::Model", StringValue (modelFlp));
+  // Configure TcpSocketBase with the model filepath.
+  Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationDelayStart",
+                      TimeValue (Seconds (warmup_s)));
+  
 
   /////////////////////////////////////////
   // Create nodes.

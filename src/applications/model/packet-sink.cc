@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -41,7 +41,7 @@ NS_LOG_COMPONENT_DEFINE ("PacketSink");
 
 NS_OBJECT_ENSURE_REGISTERED (PacketSink);
 
-TypeId 
+TypeId
 PacketSink::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::PacketSink")
@@ -163,7 +163,7 @@ void PacketSink::StopApplication ()     // Called at time specified by Stop
       m_socketList.pop_front ();
       acceptedSocket->Close ();
     }
-  if (m_socket) 
+  if (m_socket)
     {
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -182,9 +182,9 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
           break;
         }
       m_totalRx += packet->GetSize ();
-      
-      UpdateBbrRecord(packet);
-      
+
+      AddBbrRecord(packet);
+
       if (InetSocketAddress::IsMatchingType (from))
         {
           NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
@@ -207,58 +207,93 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
     }
 }
 
-void PacketSink::UpdateBbrRecord(Ptr<Packet>& packet) {
-    BbrTag tag;
-    auto good = packet->FindFirstMatchingByteTag(tag);
-    assert(good);
-    m_recvBbr = tag.isBbr;
-
-    ++m_totalBbrPackets;
-    m_bbrRecords.push_back({
-        tag.sendTime, Simulator::Now (), packet->GetSize ()});
-
-    // If adding this record caused the list of records to exceed the threshold,
-    // then remove the oldest record.
-    if (m_bbrRecords.size () > m_maxBbrRecords)
-      {
-        m_bbrRecords.pop_front();
-        assert(m_bbrRecords.size () == m_maxBbrRecords);
-      }
-}
-
-PacketSink::BbrStats PacketSink::GetBbrStats () const {
-    assert(!m_bbrRecords.empty());
-
-    Time lat = Seconds (0);
-    uint64_t bytes = 0;
-    for (auto& record : m_bbrRecords) {
-        lat += record.recvTime - record.sendTime;
-        bytes += record.bytes; 
-    }
-
-    // Mb/s
-    double tput = bytes / lat.GetSeconds () * 8 / 1e6;
-    // Seconds
-    Time avgLat = Seconds (lat.GetSeconds () / m_bbrRecords.size ());
-    return {tput, avgLat};
-}
-
 void PacketSink::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 }
- 
+
 void PacketSink::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 }
- 
+
 
 void PacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
 {
   NS_LOG_FUNCTION (this << s << from);
   s->SetRecvCallback (MakeCallback (&PacketSink::HandleRead, this));
   m_socketList.push_back (s);
+}
+
+// ACK pacing
+
+bool
+PacketSink::ReceivingBbr ()
+{
+  return m_receivingBbr;
+}
+
+uint64_t
+PacketSink::GetTotalBbrPackets ()
+{
+  return m_totalBbrPackets;
+}
+
+std::list<Ptr<Socket>>&
+PacketSink::GetSockets ()
+{
+  return m_socketList;
+}
+
+void PacketSink::AddBbrRecord(Ptr<Packet>& packet)
+{
+  BbrTag tag;
+  assert(packet->FindFirstMatchingByteTag(tag););
+  m_receivingBbr = tag.isBbr;
+
+  ++m_totalBbrPackets;
+  m_bbrRecords.push_back({
+      tag.sndTime, Simulator::Now (), packet->GetSize ()});
+
+  // If adding this record caused the list of records to exceed the threshold,
+  // then remove the oldest record.
+  if (m_bbrRecords.size () > m_maxBbrRecords)
+    {
+      m_bbrRecords.pop_front();
+      assert(m_bbrRecords.size () == m_maxBbrRecords);
+    }
+}
+
+BbrStats
+PacketSink::GetBbrStats ()
+{
+  if (m_bbrRecords.empty ())
+    {
+      return {0, 0};
+    }
+
+  Time lat = Seconds (0);
+  uint64_t bytes = 0;
+  for (auto& record : m_bbrRecords) {
+    bytes += record.bytes;
+    lat += record.recvTime - record.sndTime;
+  }
+
+  double avgTputMbps = bytes / lat.GetSeconds () * 8 / 1e6;
+  Time avgLat = lat / m_bbrRecords.size ();
+  return {avgTputMbps, avgLat};
+}
+
+void
+PacketSink::SetMaxBbrRecords (uint32_t m)
+{
+  m_maxBbrRecords = m;
+}
+
+uint32_t
+PacketSink::GetMaxBbrRecords ()
+{
+  return m_maxBbrRecords;
 }
 
 } // Namespace ns3

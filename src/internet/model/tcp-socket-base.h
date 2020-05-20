@@ -1333,27 +1333,33 @@ protected:
   static std::tuple<std::vector<std::tuple<double>>,
              std::vector<std::tuple<double>>> ReadScaleParams (const std::string& flp);
 
-  std::deque<std::pair<int64_t, uint32_t>> m_lossQueue;        //!< Queue of loss packets - <Time, loss count>
-  std::deque<int64_t> m_packetQueue;                           //!< Queue of timestamp for received packets
+  std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;        //!< Queue of loss packets - <Time, loss count>
+  std::deque<int64_t> m_arrivalTimes;                           //!< Queue of timestamp for received packets
   std::deque<PendingAck> m_pendingAcks;
   std::tuple<std::vector<std::tuple<double>>,
              std::vector<std::tuple<double>>> m_scaleParams;
+  Ptr<PacketSink> m_sink                   {nullptr};  //!< The PacketSink that owns this socket.
   bool m_unfairEnable                      {false};
   FairShareEstimationType m_fairShareType {Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
   AckPacingType m_ackPacingType             {Calc};  //!< Which method of ACK pacing to use
   SequenceNumber32 m_highestSeq                {0};  //!< Highest sequence number so far received
   SequenceNumber32 m_lastReceivedSeq           {0};  //!< Sequence number of the last received packet
   Time m_delayStart                  {Seconds (0)};  //!< Delay before ACK pacing is enabled
-  Time m_prevAck                     {Seconds (0)};
-  bool m_sendBbr                           {false};
-  bool m_recvBbr                           {false};
-  double m_fairThroughput                      {0};  //!< Fair throughput calculated by Mathis Model
+  Time m_prevAckTime                 {Seconds (0)};
+  bool m_sendingBbr                        {false};
+  bool m_receivingBbr                      {false};
   Time m_ackPeriod                   {Seconds (0)};
   std::string m_modelName                     {""};
   torch::jit::script::Module m_net       {nullptr};
 
 public:
 
+  void SetUnfairEnable (bool enable);
+  bool GetUnfairEnable () const;
+  void SetDelayStart (Time time);
+  Time GetDelayStart () const;
+  void SetSink (Ptr<PacketSink> sink);
+  Ptr<PacketSink> GetSink ();
   void SetAckPeriod (Time period) const;
   Time GetAckPeriod () const;
   void SetModel (std::string modelName, std::string modelFlp,

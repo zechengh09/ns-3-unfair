@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -36,7 +36,7 @@ class Socket;
 class Packet;
 
 /**
- * \ingroup applications 
+ * \ingroup applications
  * \defgroup packetsink PacketSink
  *
  * This application was written to complement OnOffApplication, but it
@@ -44,7 +44,7 @@ class Packet;
  * important to use in multicast situations, so that reception of the layer-2
  * multicast frames of interest are enabled, but it is also useful for
  * unicast as an example of how you can write something simple to receive
- * packets at the application layer.  Also, if an IP stack generates 
+ * packets at the application layer.  Also, if an IP stack generates
  * ICMP Port Unreachable errors, receiving applications will be needed.
  */
 
@@ -58,16 +58,16 @@ class Packet;
  * important to use in multicast situations, so that reception of the layer-2
  * multicast frames of interest are enabled, but it is also useful for
  * unicast as an example of how you can write something simple to receive
- * packets at the application layer.  Also, if an IP stack generates 
+ * packets at the application layer.  Also, if an IP stack generates
  * ICMP Port Unreachable errors, receiving applications will be needed.
  *
- * The constructor specifies the Address (IP address and port) and the 
- * transport protocol to use.   A virtual Receive () method is installed 
+ * The constructor specifies the Address (IP address and port) and the
+ * transport protocol to use.   A virtual Receive () method is installed
  * as a callback on the receiving socket.  By default, when logging is
  * enabled, it prints out the size of packets and their address.
  * A tracing source to Receive() is also available.
  */
-class PacketSink : public Application 
+class PacketSink : public Application
 {
 public:
   /**
@@ -93,21 +93,22 @@ public:
    * \return list of pointers to accepted sockets
    */
   std::list<Ptr<Socket> > GetAcceptedSockets (void) const;
- 
+
   // ACK pacing
+
   struct BbrStats {
     double tputMbps;
     Time avgLat;
   };
-  
+
   // (Mb/s, avg latency)
   // Relies on the PacketSink accepting as much data from the Socket as possible
-  //    or else the packets might be split, leading to the appearance duplicate 
+  //    or else the packets might be split, leading to the appearance duplicate
   //    of duplicate packets
   BbrStats GetBbrStats () const;
-  bool RecvBbr () const { return m_recvBbr; }
-  uint64_t GetTotalBbrPackets () const { return m_totalBbrPackets; }
-  std::list<Ptr<Socket>>& GetSockets () { return m_socketList; }
+  bool ReceivingBbr () const;
+  uint64_t GetTotalBbrPackets () const;
+  std::list<Ptr<Socket>>& GetSockets ();
 
 protected:
   virtual void DoDispose (void);
@@ -138,7 +139,7 @@ private:
    */
   void HandlePeerError (Ptr<Socket> socket);
 
-  // In the case of TCP, each socket accept returns a new socket, so the 
+  // In the case of TCP, each socket accept returns a new socket, so the
   // listening socket is stored separately from the accepted sockets
   Ptr<Socket>     m_socket;       //!< Listening socket
   std::list<Ptr<Socket> > m_socketList; //!< the accepted sockets
@@ -151,22 +152,25 @@ private:
   TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
 
   // ACK pacing
+
   struct BbrRecord {
-    Time sendTime;
+    Time sndTime;
     Time recvTime;
     uint64_t bytes;
   };
+
+  void AddBbrRecord (Ptr<Packet>& packet);
+  void SetMaxBbrRecords (uint32_t m);
+  uint32_t GetMaxBbrRecords () const;
+
   std::deque<BbrRecord> m_bbrRecords;
   uint32_t m_maxBbrRecords       {0};
   uint64_t m_totalBbrPackets     {0};
-  bool m_recvBbr             {false};
+  bool m_receivingBbr             {false};
 
-  void UpdateBbrRecord (Ptr<Packet>& packet);
-  void SetMaxBbrRecords (uint32_t m) { m_maxBbrRecords = m; }
-  uint32_t GetMaxBbrRecords () const { return m_maxBbrRecords; }
+
 };
 
 } // namespace ns3
 
 #endif /* PACKET_SINK_H */
-
