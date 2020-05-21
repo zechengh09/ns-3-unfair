@@ -24,7 +24,7 @@
 
 #include <algorithm>
 #include <cassert>
-#include <math>
+#include <math.h>
 #include <regex>
 #include <unordered_set>
 
@@ -4106,7 +4106,7 @@ TcpSocketBase::Unfair (Ptr<Packet> p) {
       return;
     }
 
-  double actualTput = m_sink->getBbrStats ().tputMbps;
+  double actualTput = m_sink->GetBbrStats ().tputMbps;
 
   // Do we want to do this?
   if (actualTput < (1.2 * targetTputMbps))
@@ -4245,7 +4245,7 @@ TcpSocketBase::EstimateFairShareAverage (Ptr<Packet> p)
   // double totalTput = 0;
   // for (auto& sink : sinks)
   //   {
-  //     totalTput += sink->getBbrStats ().tputMbps;
+  //     totalTput += sink->GetBbrStats ().tputMbps;
   //   }
   // return totalTput / sinks.size ();
   return 0;

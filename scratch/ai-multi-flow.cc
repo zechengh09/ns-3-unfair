@@ -78,8 +78,8 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
 
 
   Ptr<PacketSink> sink = DynamicCast<PacketSink> (dstApp.Get (0));
-  ns3::TcpSocketBase sock = DynamicCast<ns3::TcpSocketBase> (
-    sink->getSockets ().front ());
+  Ptr<ns3::TcpSocketBase> sock = DynamicCast<ns3::TcpSocketBase> (
+    sink->GetSockets ().front ());
   sock->SetSink (sink);
   return sink;
 }
@@ -88,12 +88,12 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
 void PrintBbrStats()
 {
   for (auto& sink : sinks) {
-      auto stats = sink->getBbrStats ();
-      assert(sink->getSockets().size() == 1);
+      auto stats = sink->GetBbrStats ();
+      assert(sink->GetSockets().size() == 1);
       NS_LOG_INFO(Simulator::Now() << " - throughput: " <<
                   stats.tputMbps << " Mb/s, average latency: " <<
                   stats.avgLat << ", pending ACKs: " <<
-                  DynamicCast<ns3::TcpSocketBase> (sink->getSockets ().front ())->GetNumPendingAcks ());
+                  DynamicCast<ns3::TcpSocketBase> (sink->GetSockets ().front ())->GetNumPendingAcks ());
   }
   Simulator::Schedule( Seconds(BBR_PRINT_PERIOD), PrintBbrStats);
 }
@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
   double delUs = 5000;
   uint32_t que = 100;
   double durS = 20;
-  uint32_t recalcUS = 1<<30;
+  uint32_t recalcUs = 1<<30;
   double warmupS = 5;
   bool pcap = false;
   std::string modelFlp = "";
@@ -120,7 +120,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("delay_us", "Link delay (us). RTT is 4x this value.", delUs);
   cmd.AddValue ("queue_capacity_p", "Router queue size (packets).", que);
   cmd.AddValue ("experiment_duration_s", "Simulation duration (s).", durS);
-  cmd.AddValue ("recalc_us", "Between recalculating ACK delay (us)", recalcUS);
+  cmd.AddValue ("recalc_us", "Between recalculating ACK delay (us)", recalcUs);
   cmd.AddValue ("warmup_s", "Time before delaying ACKs (s)", warmupS);
   cmd.AddValue ("pcap", "Record a pcap trace from each port (true or false).", pcap);
   cmd.AddValue ("model", "Path to the model file.", modelFlp);
@@ -184,7 +184,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::PacketSink::maxBbrRecords", UintegerValue (1000));
   // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationEnable",
-                      BoolValue (true));
+                      BooleanValue (true));
   // updateAckPeriod (MicroSeconds(0));
   Config::SetDefault ("ns3::TcpSocketBase::AckPeriod",
                       TimeValue (MicroSeconds (0)));
@@ -192,7 +192,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocketBase::Model", StringValue (modelFlp));
   // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationDelayStart",
-                      TimeValue (Seconds (warmup_s)));
+                      TimeValue (Seconds (warmupS)));
 
 
   /////////////////////////////////////////
@@ -257,8 +257,8 @@ int main (int argc, char *argv[])
   // Setup tracing (as appropriate).
   NS_LOG_INFO ("Configuring tracing.");
   std::stringstream detailsSs;
-  detailsSs << ackPeriod << "us-" << delayToAckDelay << "s-" << bw << "-"
-             << rttUs << "us-" << durS << "s";
+  // detailsSs << ackPeriod << "us-" << delayToAckDelay << "s-" << bw << "-"
+  //            << rttUs << "us-" << durS << "s";
   std::string details = detailsSs.str ();
 
   if (ENABLE_TRACE) {
@@ -305,7 +305,7 @@ int main (int argc, char *argv[])
       double tput = sink->GetTotalRx() * 8 / durS / 1000000.0;
       sumTput += tput;
       sumTputSq += pow(tput, 2);
-      NS_LOG_INFO ((sink->recvBbr() ? "Bbr" : "Other") << " - throughput: " <<
+      NS_LOG_INFO ((sink->ReceivingBbr() ? "Bbr" : "Other") << " - throughput: " <<
                    tput << " Mb/s");
     }
   NS_LOG_INFO ("Jain's fairness index: " <<

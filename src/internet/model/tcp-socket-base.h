@@ -35,6 +35,7 @@
 #include "tcp-tx-buffer.h"
 #include "rtt-estimator.h"
 #include "tcp-l4-protocol.h"
+#include "packet-sink.h"
 
 #include <torch/script.h>
 
@@ -1282,14 +1283,14 @@ protected:
 
   // ACK pacing
 
-  enum FairShareEstimationType {
+  enum class FairShareEstimationType {
     Mathis,
     Padhye,
     Average,
     Model
   };
 
-  enum AckPacingType {
+  enum class AckPacingType {
     Calc,
     Model,
   };
@@ -1342,8 +1343,8 @@ protected:
              std::vector<std::tuple<double>>> m_scaleParams;
   Ptr<PacketSink> m_sink                   {nullptr};  //!< The PacketSink that owns this socket.
   bool m_unfairEnable                      {false};
-  FairShareEstimationType m_fairShareType {Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
-  AckPacingType m_ackPacingType             {Calc};  //!< Which method of ACK pacing to use
+  FairShareEstimationType m_fairShareType {FairShareEstimationType::Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
+  AckPacingType m_ackPacingType             {AckPacingType::Calc};  //!< Which method of ACK pacing to use
   SequenceNumber32 m_highestSeq                {0};  //!< Highest sequence number so far received
   SequenceNumber32 m_lastReceivedSeq           {0};  //!< Sequence number of the last received packet
   Time m_delayStart                  {Seconds (0)};  //!< Delay before ACK pacing is enabled
