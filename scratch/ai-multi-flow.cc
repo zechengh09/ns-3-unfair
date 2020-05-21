@@ -87,14 +87,15 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
 
 void PrintBbrStats()
 {
-  for (auto& sink : sinks) {
-      auto stats = sink->GetBbrStats ();
+  for (auto& sink : sinks)
+    {
+      PacketSink::BbrStats stats = sink->GetBbrStats ();
       assert(sink->GetSockets().size() == 1);
       NS_LOG_INFO(Simulator::Now() << " - throughput: " <<
                   stats.tputMbps << " Mb/s, average latency: " <<
                   stats.avgLat << ", pending ACKs: " <<
                   DynamicCast<ns3::TcpSocketBase> (sink->GetSockets ().front ())->GetNumPendingAcks ());
-  }
+    }
   Simulator::Schedule( Seconds(BBR_PRINT_PERIOD), PrintBbrStats);
 }
 
@@ -104,7 +105,7 @@ int main (int argc, char *argv[])
   // Parse command line arguments.
   double bwMbps = 10;
   double delUs = 5000;
-  uint32_t que = 100;
+  uint32_t queP = 1000;
   double durS = 20;
   uint32_t recalcUs = 1<<30;
   double warmupS = 5;
@@ -118,7 +119,7 @@ int main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue ("bandwidth_Mbps", "Bandwidth for both links (Mbps).", bwMbps);
   cmd.AddValue ("delay_us", "Link delay (us). RTT is 4x this value.", delUs);
-  cmd.AddValue ("queue_capacity_p", "Router queue size (packets).", que);
+  cmd.AddValue ("queue_capacity_p", "Router queue size (packets).", queP);
   cmd.AddValue ("experiment_duration_s", "Simulation duration (s).", durS);
   cmd.AddValue ("recalc_us", "Between recalculating ACK delay (us)", recalcUs);
   cmd.AddValue ("warmup_s", "Time before delaying ACKs (s)", warmupS);
@@ -138,6 +139,9 @@ int main (int argc, char *argv[])
   std::stringstream delSs;
   delSs << delUs << "us";
   std::string del = delSs.str ();
+  std::stringstream queSs;
+  queSs << queP << "p";
+  std::string que = queSs.str ();
 
   auto routerToDeviceBW = bwMbps;
   std::stringstream sndSS;
@@ -158,7 +162,7 @@ int main (int argc, char *argv[])
   std::cout << "Router to Client Delay (us): " << delUs << "\n";
   std::cout << "RTT (us): " << rttUs << "\n";
   std::cout << "Packet size (bytes): " << PACKET_SIZE << "\n";
-  std::cout << "Router queue size (packets): "<< que << "\n";
+  std::cout << "Router queue size (packets): "<< queP << "\n";
   std::cout << "Warmup (s): " << warmupS << "\n";
   std::cout << "Duration (s): " << durS << "\n";
   std::cout << "\n";
@@ -222,9 +226,7 @@ int main (int argc, char *argv[])
   p2p.SetDeviceAttribute ("DataRate", StringValue (routerToDeviceBWStr));
   p2p.SetChannelAttribute ("Delay", StringValue (del));
   p2p.SetDeviceAttribute ("Mtu", UintegerValue (MTU));
-  p2p.SetQueue ("ns3::DropTailQueue",
-                "Mode", StringValue ("QUEUE_MODE_PACKETS"),
-                "MaxPackets", UintegerValue (que));
+  p2p.SetQueue ("ns3::DropTailQueue", "MaxSize", QueueSizeValue (que));
   NetDeviceContainer devices2 = p2p.Install (n1Ton2);
 
   /////////////////////////////////////////

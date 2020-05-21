@@ -35,7 +35,7 @@
 #include "tcp-tx-buffer.h"
 #include "rtt-estimator.h"
 #include "tcp-l4-protocol.h"
-#include "packet-sink.h"
+#include "ns3/packet-sink.h"
 
 #include <torch/script.h>
 
@@ -1296,7 +1296,7 @@ protected:
   };
 
   struct PendingAck {
-    Ptr<TcpL4Protocol> tcp;
+    Ptr<TcpL4Protocol> tcp {nullptr};
     Ptr<Packet> p;
     TcpHeader header;
     Ipv4Address localaddr;
@@ -1305,24 +1305,23 @@ protected:
   };
 
 
-  void Unfair (Ptr<Packet> p);
+  void Unfair (Ptr<Packet> p, SequenceNumber32 seq);
   /**
    * \brief Estimate the loss packets based on the received sequence number
    * \param p Pointer to the packet
-   * \param expectedSeq Expected sequence number of the next data packet
-   * \param tcpHeader TCP header for the incoming packet
+   * \param actualSeq Sequence number of the packet
    */
-  void EstimateLoss (Ptr<Packet> p, const SequenceNumber32 expectedSeq,
-                     const TcpHeader& tcpHeader);
+  void EstimateLoss (Ptr<Packet> p, const SequenceNumber32 actualSeq);
   /**
    * \brief Estimate the fair share of the current flow
    * \param p Pointer to the packet
+   * \param seq Sequence number of the packet
    */
-  double EstimateFairShareCalc (Ptr<Packet> p);
+  double EstimateFairShareCalc (Ptr<Packet> p, SequenceNumber32 seq, Time rtt);
   double EstimateFairShareAverage (Ptr<Packet> p);
   double EstimateFairShareModel (Ptr<Packet> p);
-  double EstimateAckPeriodCalc (double actualTput, double targetTput);
-  double EstimateAckPeriodModel (double targetTput);
+  Time EstimateAckPeriodCalc (double actualTput, double targetTput, Time rtt);
+  Time EstimateAckPeriodModel (double targetTput);
   void ScheduleAckPacket (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p,
                           TcpHeader header, Ipv4Address localaddr,
                           Ipv4Address peeraddr, Ptr<NetDevice> boundnetdevice);
@@ -1333,18 +1332,18 @@ protected:
                 Ptr<NetDevice> boundnetdevice);
   static double Scale (double x, double minIn, double maxIn, double minOut,
                        double maxOut);
-  static std::tuple<std::vector<std::tuple<double>>,
-             std::vector<std::tuple<double>>> ReadScaleParams (const std::string& flp);
+  static std::tuple<std::vector<std::tuple<double, double>>,
+                    std::vector<std::tuple<double, double>>> ReadScaleParams (std::string flp);
 
-  std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;        //!< Queue of loss packets - <Time, loss count>
-  std::deque<int64_t> m_arrivalTimes;                           //!< Queue of timestamp for received packets
+  std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;      //!< Queue of loss packets - <Time, loss count>
+  std::deque<Time> m_arrivalTimes;                            //!< Queue of timestamp for received packets
   std::deque<PendingAck> m_pendingAcks;
-  std::tuple<std::vector<std::tuple<double>>,
-             std::vector<std::tuple<double>>> m_scaleParams;
-  Ptr<PacketSink> m_sink                   {nullptr};  //!< The PacketSink that owns this socket.
-  bool m_unfairEnable                      {false};
+  std::tuple<std::vector<std::tuple<double, double>>,
+             std::vector<std::tuple<double, double>>> m_scaleParams;
   FairShareEstimationType m_fairShareType {FairShareEstimationType::Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
-  AckPacingType m_ackPacingType             {AckPacingType::Calc};  //!< Which method of ACK pacing to use
+  AckPacingType m_ackPacingType                       {AckPacingType::Calc};  //!< Which method of ACK pacing to use
+  Ptr<PacketSink> m_sink                 {nullptr};  //!< The PacketSink that owns this socket.
+  bool m_unfairEnable                      {false};
   SequenceNumber32 m_highestSeq                {0};  //!< Highest sequence number so far received
   SequenceNumber32 m_lastReceivedSeq           {0};  //!< Sequence number of the last received packet
   Time m_delayStart                  {Seconds (0)};  //!< Delay before ACK pacing is enabled
@@ -1362,14 +1361,13 @@ public:
   void SetDelayStart (Time time);
   Time GetDelayStart () const;
   void SetSink (Ptr<PacketSink> sink);
-  Ptr<PacketSink> GetSink ();
-  void SetAckPeriod (Time period) const;
+  Ptr<PacketSink> GetSink () const;
+  void SetAckPeriod (Time period);
   Time GetAckPeriod () const;
-  void SetModel (std::string modelName, std::string modelFlp,
-                 std::string scaleParamsFlp) const;
+  void SetModel (std::string modelFlp);
   std::string GetModel () const;
   size_t GetNumPendingAcks () const;
-  bool GetRecvBbr () const;
+  bool GetReceivingBbr () const;
 };
 
 /**

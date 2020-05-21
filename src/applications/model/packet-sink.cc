@@ -17,6 +17,9 @@
  *
  * Author:  Tom Henderson (tomhend@u.washington.edu)
  */
+
+#include <cassert>
+
 #include "ns3/address.h"
 #include "ns3/address-utils.h"
 #include "ns3/log.h"
@@ -33,7 +36,6 @@
 #include "packet-sink.h"
 
 #include "ns3/bbr-tag.h"
-#include <cassert>
 
 namespace ns3 {
 
@@ -228,15 +230,35 @@ void PacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
 // ACK pacing
 
 bool
-PacketSink::ReceivingBbr ()
+PacketSink::ReceivingBbr () const
 {
   return m_receivingBbr;
 }
 
 uint64_t
-PacketSink::GetTotalBbrPackets ()
+PacketSink::TotalBbrPackets () const
 {
   return m_totalBbrPackets;
+}
+
+PacketSink::BbrStats
+PacketSink::GetBbrStats () const
+{
+  if (m_bbrRecords.empty ())
+    {
+      return BbrStats ();
+    }
+
+  Time lat = Seconds (0);
+  uint64_t bytes = 0;
+  for (auto& record : m_bbrRecords) {
+    bytes += record.bytes;
+    lat += record.recvTime - record.sndTime;
+  }
+
+  double avgTputMbps = bytes / lat.GetSeconds () * 8 / 1e6;
+  Time avgLat = lat / m_bbrRecords.size ();
+  return {avgTputMbps, avgLat};
 }
 
 std::list<Ptr<Socket>>&
@@ -248,7 +270,7 @@ PacketSink::GetSockets ()
 void PacketSink::AddBbrRecord(Ptr<Packet>& packet)
 {
   BbrTag tag;
-  assert(packet->FindFirstMatchingByteTag(tag););
+  assert(packet->FindFirstMatchingByteTag(tag));
   m_receivingBbr = tag.isBbr;
 
   ++m_totalBbrPackets;
@@ -264,26 +286,6 @@ void PacketSink::AddBbrRecord(Ptr<Packet>& packet)
     }
 }
 
-BbrStats
-PacketSink::GetBbrStats ()
-{
-  if (m_bbrRecords.empty ())
-    {
-      return {0, 0};
-    }
-
-  Time lat = Seconds (0);
-  uint64_t bytes = 0;
-  for (auto& record : m_bbrRecords) {
-    bytes += record.bytes;
-    lat += record.recvTime - record.sndTime;
-  }
-
-  double avgTputMbps = bytes / lat.GetSeconds () * 8 / 1e6;
-  Time avgLat = lat / m_bbrRecords.size ();
-  return {avgTputMbps, avgLat};
-}
-
 void
 PacketSink::SetMaxBbrRecords (uint32_t m)
 {
@@ -291,7 +293,7 @@ PacketSink::SetMaxBbrRecords (uint32_t m)
 }
 
 uint32_t
-PacketSink::GetMaxBbrRecords ()
+PacketSink::GetMaxBbrRecords () const
 {
   return m_maxBbrRecords;
 }

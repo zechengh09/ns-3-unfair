@@ -21,13 +21,13 @@
 #ifndef PACKET_SINK_H
 #define PACKET_SINK_H
 
+#include <deque>
+
 #include "ns3/application.h"
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/traced-callback.h"
 #include "ns3/address.h"
-
-#include <deque>
 
 namespace ns3 {
 
@@ -97,17 +97,17 @@ public:
   // ACK pacing
 
   struct BbrStats {
-    double tputMbps;
-    Time avgLat;
+    double tputMbps {0};
+    Time avgLat     {0};
   };
 
+  bool ReceivingBbr () const;
+  uint64_t TotalBbrPackets () const;
   // (Mb/s, avg latency)
   // Relies on the PacketSink accepting as much data from the Socket as possible
   //    or else the packets might be split, leading to the appearance duplicate
   //    of duplicate packets
   BbrStats GetBbrStats () const;
-  bool ReceivingBbr () const;
-  uint64_t GetTotalBbrPackets () const;
   std::list<Ptr<Socket>>& GetSockets ();
 
 protected:
@@ -154,9 +154,9 @@ private:
   // ACK pacing
 
   struct BbrRecord {
-    Time sndTime;
-    Time recvTime;
-    uint64_t bytes;
+    Time sndTime   {Seconds (0)};
+    Time recvTime  {Seconds (0)};
+    uint64_t bytes           {0};
   };
 
   void AddBbrRecord (Ptr<Packet>& packet);
@@ -166,7 +166,7 @@ private:
   std::deque<BbrRecord> m_bbrRecords;
   uint32_t m_maxBbrRecords       {0};
   uint64_t m_totalBbrPackets     {0};
-  bool m_receivingBbr             {false};
+  bool m_receivingBbr        {false};
 
 
 };
