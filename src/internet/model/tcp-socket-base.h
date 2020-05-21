@@ -36,6 +36,8 @@
 #include "rtt-estimator.h"
 #include "tcp-l4-protocol.h"
 
+#include <torch/script.h>
+
 namespace ns3 {
 
 class Ipv4EndPoint;

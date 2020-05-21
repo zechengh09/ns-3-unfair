@@ -22,6 +22,12 @@
 #define NS_LOG_APPEND_CONTEXT \
   if (m_node) { std::clog << " [node " << m_node->GetId () << "] "; }
 
+#include <algorithm>
+#include <cassert>
+#include <math>
+#include <regex>
+#include <unordered_set>
+
 #include "ns3/abort.h"
 #include "ns3/node.h"
 #include "ns3/inet-socket-address.h"
@@ -55,11 +61,6 @@
 #include "tcp-option-sack-permitted.h"
 #include "tcp-option-sack.h"
 #include "tcp-congestion-ops.h"
-
-#include <math.h>
-#include <algorithm>
-#include <cassert>
-#include <unordered_set>
 
 #include "bbr-tag.h"
 
@@ -417,7 +418,7 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
     m_highestSeq (sock.m_highestSeq),
     m_lastReceivedSeq (sock.m_lastReceivedSeq),
     m_delayStart (sock.m_delayStart),
-    m_prevAckTime (sock.m_prevAckTime),    
+    m_prevAckTime (sock.m_prevAckTime),
     m_sendingBbr (sock.m_sendingBbr),
     m_receivingBbr (sock.m_receivingBbr),
     m_ackPeriod (sock.m_ackPeriod),
@@ -4074,8 +4075,8 @@ RttHistory::RttHistory (const RttHistory& h)
 
 void
 TcpSocketBase::Unfair (Ptr<Packet> p) {
-  // If unfariness mitigation is disabled, then abort.
-  if (! m_unfairEnable)
+  // If this is not a BBR flow, then abort.
+  if (! m_receivingBbr)
     {
       return;
     }
@@ -4087,18 +4088,6 @@ TcpSocketBase::Unfair (Ptr<Packet> p) {
   assert(p->FindFirstMatchingByteTag(tag));
   m_receivingBbr = tag.isBbr;
 
-  // If this is not a BBR flow, then abort.
-  if (! m_receivingBbr)
-    {
-      return;
-    }
-  // If the warmup time has not passed, then abort.
-  if (Simulator::Now () < m_delayStart)
-    {
-      return;
-    }
-    
-
   double fair_share;
   switch (m_fairShareType)
     {
@@ -4107,6 +4096,14 @@ TcpSocketBase::Unfair (Ptr<Packet> p) {
         break;
     default:
       fair_share = EstimateFairShareCalc (p);
+    }
+
+  // If unfariness mitigation is disabled or the warmup time has not passed,
+  // then abort. Perform this check after computing the fair share so that any
+  // internal bookkeeping done as part of that process still takes place.
+  if (! m_unfairEnable || Simulator::Now () < m_delayStart)
+    {
+      return;
     }
 
   double actualTput = m_sink->getBbrStats ().tputMbps;

@@ -29,10 +29,6 @@
 #include "ns3/config-store-module.h"
 #include "ns3/config.h"
 
-#include <torch/script.h>
-
-#include <regex>
-
 using namespace ns3;
 
 // Constants.
@@ -197,7 +193,7 @@ int main (int argc, char *argv[])
   // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationDelayStart",
                       TimeValue (Seconds (warmup_s)));
-  
+
 
   /////////////////////////////////////////
   // Create nodes.
