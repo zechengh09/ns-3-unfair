@@ -9,8 +9,8 @@ namespace ns3 {
 
 class BbrTag : public Tag {
  public:
-  BbrTag() = default;
-  BbrTag(Time time, bool _isBbr) : sndTime(time), isBbr(_isBbr) {}
+  BbrTag () = default;
+  BbrTag (Time time, bool _isBbr) : sndTime (time), isBbr (_isBbr) {}
 
   static TypeId
     GetTypeId (void)
@@ -31,7 +31,7 @@ class BbrTag : public Tag {
   uint32_t
     GetSerializedSize (void) const
   {
-    return sizeof(Time);
+    return sizeof (Time);
   }
 
   void

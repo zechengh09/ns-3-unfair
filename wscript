@@ -724,9 +724,9 @@ def create_ns3_program(bld, name, dependencies=('core',)):
     program.includes = "#"
     program.use = program.ns3_module_dependencies
 
+    # Add libtorch.
     program.env.append_value('CPPFLAGS', '-I/opt/libtorch/include')
     program.env.append_value('LINKFLAGS', '-L/opt/libtorch/lib')
-
     for path in glob('/opt/libtorch/lib/lib*.so'):
         lib = os.path.basename(path)[3:-3]
         if lib == "torch_python": continue
@@ -877,13 +877,9 @@ def build(bld):
     if bld.cmd == 'clean':
         _cleandocs()
 
+    # Add libtorch.
     bld.env.append_value('CPPFLAGS', '-I/opt/libtorch/include')
     bld.env.append_value('LINKFLAGS', '-L/opt/libtorch/lib')
-
-    # for path in glob('/opt/libtorch/lib/lib*.so'):
-    #     lib = os.path.basename(path)[3:-3]
-    #     if lib == "torch_python": continue
-    #     program.env.append_value('LIB', lib)
 
     # process subfolders from here
     bld.recurse('src')

@@ -1330,10 +1330,10 @@ protected:
   void SendAck (Ptr<TcpL4Protocol> tcp, Ptr<Packet> p, TcpHeader header,
                 Ipv4Address localaddr, Ipv4Address peeraddr,
                 Ptr<NetDevice> boundnetdevice);
-  static double Scale (double x, double minIn, double maxIn, double minOut,
-                       double maxOut);
-  static std::tuple<std::vector<std::tuple<double, double>>,
-                    std::vector<std::tuple<double, double>>> ReadScaleParams (std::string flp);
+  double Scale (double x, double minIn, double maxIn, double minOut,
+                double maxOut);
+  std::tuple<std::vector<std::tuple<double, double>>,
+             std::vector<std::tuple<double, double>>> ReadScaleParams (std::string flp);
 
   std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;      //!< Queue of loss packets - <Time, loss count>
   std::deque<Time> m_arrivalTimes;                            //!< Queue of timestamp for received packets
@@ -1352,7 +1352,7 @@ protected:
   bool m_receivingBbr                      {false};
   Time m_ackPeriod                   {Seconds (0)};
   std::string m_modelName                     {""};
-  torch::jit::script::Module m_net       {nullptr};
+  torch::jit::script::Module *m_net      {nullptr};
 
 public:
 

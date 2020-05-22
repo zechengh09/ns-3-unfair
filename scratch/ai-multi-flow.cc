@@ -60,12 +60,12 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
                            NodeContainer nodes, double durS, uint32_t recalcUs)
 {
   // Source (at node 0).
-  BulkSendHelper src("ns3::TcpSocketFactory",
-                     InetSocketAddress(i1i2.GetAddress(1), port));
+  BulkSendHelper src ("ns3::TcpSocketFactory",
+                      InetSocketAddress (i1i2.GetAddress (1), port));
   // Set the amount of data to send in bytes (0 for unlimited).
   src.SetAttribute ("MaxBytes", UintegerValue (0));
   src.SetAttribute ("SendSize", UintegerValue (PACKET_SIZE));
-  ApplicationContainer srcApp = src.Install(nodes.Get(0));
+  ApplicationContainer srcApp = src.Install (nodes.Get (0));
   srcApp.Start (Seconds (START_TIME));
   srcApp.Stop (Seconds (START_TIME + durS));
 
@@ -78,25 +78,28 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
 
 
   Ptr<PacketSink> sink = DynamicCast<PacketSink> (dstApp.Get (0));
-  Ptr<ns3::TcpSocketBase> sock = DynamicCast<ns3::TcpSocketBase> (
+  Ptr<TcpSocketBase> sock = DynamicCast<TcpSocketBase> (
     sink->GetSockets ().front ());
-  sock->SetSink (sink);
+  // sock->SetSink (sink);
   return sink;
 }
 
 
-void PrintBbrStats()
+void PrintStats ()
 {
+  NS_LOG_INFO (Simulator::Now ().GetSeconds () << " s:");
   for (auto& sink : sinks)
     {
-      PacketSink::BbrStats stats = sink->GetBbrStats ();
-      assert(sink->GetSockets().size() == 1);
-      NS_LOG_INFO(Simulator::Now() << " - throughput: " <<
-                  stats.tputMbps << " Mb/s, average latency: " <<
-                  stats.avgLat << ", pending ACKs: " <<
-                  DynamicCast<ns3::TcpSocketBase> (sink->GetSockets ().front ())->GetNumPendingAcks ());
+      PacketSink::Stats stats = sink->GetStats ();
+      assert (sink->GetSockets ().size () == 1);
+      NS_LOG_INFO ("  " << (sink->ReceivingBbr () ? "BBR" : "Other") <<
+                   " - avg tput: " << stats.tputMbps <<
+                   " Mb/s, avg lat: " << stats.avgLat.GetMicroSeconds () <<
+                   " us, pending ACKs: " <<
+                   DynamicCast<TcpSocketBase> (
+                     sink->GetSockets ().front ())->GetNumPendingAcks ());
     }
-  Simulator::Schedule( Seconds(BBR_PRINT_PERIOD), PrintBbrStats);
+  Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), PrintStats);
 }
 
 
@@ -143,10 +146,10 @@ int main (int argc, char *argv[])
   queSs << queP << "p";
   std::string que = queSs.str ();
 
-  auto routerToDeviceBW = bwMbps;
+  double routerToDeviceBW = bwMbps;
   std::stringstream sndSS;
   sndSS << routerToDeviceBW << "Mbps";
-  auto routerToDeviceBWStr = sndSS.str();
+  std::string routerToDeviceBWStr = sndSS.str ();
 
   /////////////////////////////////////////
   // Turn on logging and report parameters.
@@ -185,7 +188,7 @@ int main (int argc, char *argv[])
   // experiment is not application-limited.
   Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1'000'000u));
   Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1'000'000u));
-  Config::SetDefault ("ns3::PacketSink::maxBbrRecords", UintegerValue (1000));
+  Config::SetDefault ("ns3::PacketSink::MaxPacketRecords", UintegerValue (10000));
   // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationEnable",
                       BooleanValue (true));
@@ -277,7 +280,7 @@ int main (int argc, char *argv[])
     p2p.EnablePcapAll (pcapName.str (), true);
   }
 
-  Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), PrintBbrStats);
+  Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), PrintStats);
 
   /////////////////////////////////////////
   // Run simulation.
@@ -300,18 +303,20 @@ int main (int argc, char *argv[])
   // Calculate fairness.
   NS_LOG_INFO ("Calculating fairness.");
 
-  double sumTput = 0;
-  double sumTputSq = 0;
+  double sumTputMbps = 0;
+  double sumTputMbpsSq = 0;
+  NS_LOG_INFO ("Flows:");
   for (auto& sink : sinks)
     {
-      double tput = sink->GetTotalRx() * 8 / durS / 1000000.0;
-      sumTput += tput;
-      sumTputSq += pow(tput, 2);
-      NS_LOG_INFO ((sink->ReceivingBbr() ? "Bbr" : "Other") << " - throughput: " <<
-                   tput << " Mb/s");
+      PacketSink::Stats stats = sink->GetStats ();
+      double tputMbps = sink->GetTotalRx () * 8 / durS / 1e6;
+      sumTputMbps += tputMbps;
+      sumTputMbpsSq += pow (tputMbps, 2);
+      NS_LOG_INFO ("  " << (sink->ReceivingBbr () ? "BBR" : "Other") <<
+                   " - avg tput: " << tputMbps << " Mb/s");
     }
   NS_LOG_INFO ("Jain's fairness index: " <<
-               pow(sumTput, 2) / (sinks.size() * sumTputSq));
+               pow(sumTputMbps, 2) / (sinks.size () * sumTputMbpsSq));
 
   // Done.
   Simulator::Destroy ();

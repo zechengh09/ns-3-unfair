@@ -18,8 +18,6 @@
  * Author:  Tom Henderson (tomhend@u.washington.edu)
  */
 
-#include <cassert>
-
 #include "ns3/address.h"
 #include "ns3/address-utils.h"
 #include "ns3/log.h"
@@ -60,12 +58,11 @@ PacketSink::GetTypeId (void)
                    TypeIdValue (UdpSocketFactory::GetTypeId ()),
                    MakeTypeIdAccessor (&PacketSink::m_tid),
                    MakeTypeIdChecker ())
-    .AddAttribute ("maxBbrRecords",
-                     "Number of BBR packet records to use to estimate throughput",
-                     UintegerValue (1000),
-                     MakeUintegerAccessor (
-                        &PacketSink::SetMaxBbrRecords,
-                        &PacketSink::GetMaxBbrRecords),
+    .AddAttribute ("MaxPacketRecords",
+                   "Number of packet records to use to estimate throughput",
+                   UintegerValue (1000),
+                   MakeUintegerAccessor (&PacketSink::SetMaxPacketRecords,
+                                         &PacketSink::GetMaxPacketRecords),
                      MakeUintegerChecker<uint64_t> ())
     .AddTraceSource ("Rx",
                      "A packet has been received",
@@ -185,7 +182,7 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
         }
       m_totalRx += packet->GetSize ();
 
-      AddBbrRecord(packet);
+      AddPacketRecord(packet);
 
       if (InetSocketAddress::IsMatchingType (from))
         {
@@ -232,70 +229,78 @@ void PacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
 bool
 PacketSink::ReceivingBbr () const
 {
+  NS_LOG_FUNCTION (this);
   return m_receivingBbr;
 }
 
 uint64_t
-PacketSink::TotalBbrPackets () const
+PacketSink::TotalPackets () const
 {
-  return m_totalBbrPackets;
+  NS_LOG_FUNCTION (this);
+  return m_totalPackets;
 }
 
-PacketSink::BbrStats
-PacketSink::GetBbrStats () const
+PacketSink::Stats
+PacketSink::GetStats () const
 {
-  if (m_bbrRecords.empty ())
+  NS_LOG_FUNCTION (this);
+  if (m_packetRecords.empty ())
     {
-      return BbrStats ();
+      return Stats ();
     }
 
-  Time lat = Seconds (0);
   uint64_t bytes = 0;
-  for (auto& record : m_bbrRecords) {
+  Time lat = Seconds (0);
+  for (auto& record : m_packetRecords) {
     bytes += record.bytes;
     lat += record.recvTime - record.sndTime;
   }
 
-  double avgTputMbps = bytes / lat.GetSeconds () * 8 / 1e6;
-  Time avgLat = lat / m_bbrRecords.size ();
-  return {avgTputMbps, avgLat};
+  double avgTputMbps = bytes * 8 / 1e6 /
+    (m_packetRecords.back ().recvTime - m_packetRecords.front ().sndTime).GetSeconds ();
+  Time avgLat = lat / m_packetRecords.size ();
+  return PacketSink::Stats ({avgTputMbps, avgLat});
 }
 
 std::list<Ptr<Socket>>&
 PacketSink::GetSockets ()
 {
+  NS_LOG_FUNCTION (this);
   return m_socketList;
 }
 
-void PacketSink::AddBbrRecord(Ptr<Packet>& packet)
+void PacketSink::AddPacketRecord (Ptr<Packet>& p)
 {
+  NS_LOG_FUNCTION (this << p);
   BbrTag tag;
-  assert(packet->FindFirstMatchingByteTag(tag));
+  NS_ASSERT (p->FindFirstMatchingByteTag (tag));
   m_receivingBbr = tag.isBbr;
 
-  ++m_totalBbrPackets;
-  m_bbrRecords.push_back({
-      tag.sndTime, Simulator::Now (), packet->GetSize ()});
+  ++m_totalPackets;
+  m_packetRecords.push_back({
+      tag.sndTime, Simulator::Now (), p->GetSize ()});
 
   // If adding this record caused the list of records to exceed the threshold,
   // then remove the oldest record.
-  if (m_bbrRecords.size () > m_maxBbrRecords)
+  if (m_packetRecords.size () > m_maxPacketRecords)
     {
-      m_bbrRecords.pop_front();
-      assert(m_bbrRecords.size () == m_maxBbrRecords);
+      m_packetRecords.pop_front ();
+      NS_ASSERT (m_packetRecords.size () == m_maxPacketRecords);
     }
 }
 
 void
-PacketSink::SetMaxBbrRecords (uint32_t m)
+PacketSink::SetMaxPacketRecords (uint32_t m)
 {
-  m_maxBbrRecords = m;
+  NS_LOG_FUNCTION (this << m);
+  m_maxPacketRecords = m;
 }
 
 uint32_t
-PacketSink::GetMaxBbrRecords () const
+PacketSink::GetMaxPacketRecords () const
 {
-  return m_maxBbrRecords;
+  NS_LOG_FUNCTION (this);
+  return m_maxPacketRecords;
 }
 
 } // Namespace ns3
