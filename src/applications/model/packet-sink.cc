@@ -33,8 +33,6 @@
 #include "ns3/udp-socket-factory.h"
 #include "packet-sink.h"
 
-#include "ns3/bbr-tag.h"
-
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("PacketSink");
@@ -58,12 +56,6 @@ PacketSink::GetTypeId (void)
                    TypeIdValue (UdpSocketFactory::GetTypeId ()),
                    MakeTypeIdAccessor (&PacketSink::m_tid),
                    MakeTypeIdChecker ())
-    .AddAttribute ("MaxPacketRecords",
-                   "Number of packet records to use to estimate throughput",
-                   UintegerValue (1000),
-                   MakeUintegerAccessor (&PacketSink::SetMaxPacketRecords,
-                                         &PacketSink::GetMaxPacketRecords),
-                     MakeUintegerChecker<uint64_t> ())
     .AddTraceSource ("Rx",
                      "A packet has been received",
                      MakeTraceSourceAccessor (&PacketSink::m_rxTrace),
@@ -182,8 +174,6 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
         }
       m_totalRx += packet->GetSize ();
 
-      AddPacketRecord(packet);
-
       if (InetSocketAddress::IsMatchingType (from))
         {
           NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
@@ -226,81 +216,11 @@ void PacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
 
 // ACK pacing
 
-bool
-PacketSink::ReceivingBbr () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_receivingBbr;
-}
-
-uint64_t
-PacketSink::TotalPackets () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_totalPackets;
-}
-
-PacketSink::Stats
-PacketSink::GetStats () const
-{
-  NS_LOG_FUNCTION (this);
-  if (m_packetRecords.empty ())
-    {
-      return Stats ();
-    }
-
-  uint64_t bytes = 0;
-  Time lat = Seconds (0);
-  for (auto& record : m_packetRecords) {
-    bytes += record.bytes;
-    lat += record.recvTime - record.sndTime;
-  }
-
-  double avgTputMbps = bytes * 8 / 1e6 /
-    (m_packetRecords.back ().recvTime - m_packetRecords.front ().sndTime).GetSeconds ();
-  Time avgLat = lat / m_packetRecords.size ();
-  return PacketSink::Stats ({avgTputMbps, avgLat});
-}
-
 std::list<Ptr<Socket>>&
 PacketSink::GetSockets ()
 {
   NS_LOG_FUNCTION (this);
   return m_socketList;
-}
-
-void PacketSink::AddPacketRecord (Ptr<Packet>& p)
-{
-  NS_LOG_FUNCTION (this << p);
-  BbrTag tag;
-  NS_ASSERT (p->FindFirstMatchingByteTag (tag));
-  m_receivingBbr = tag.isBbr;
-
-  ++m_totalPackets;
-  m_packetRecords.push_back({
-      tag.sndTime, Simulator::Now (), p->GetSize ()});
-
-  // If adding this record caused the list of records to exceed the threshold,
-  // then remove the oldest record.
-  if (m_packetRecords.size () > m_maxPacketRecords)
-    {
-      m_packetRecords.pop_front ();
-      NS_ASSERT (m_packetRecords.size () == m_maxPacketRecords);
-    }
-}
-
-void
-PacketSink::SetMaxPacketRecords (uint32_t m)
-{
-  NS_LOG_FUNCTION (this << m);
-  m_maxPacketRecords = m;
-}
-
-uint32_t
-PacketSink::GetMaxPacketRecords () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_maxPacketRecords;
 }
 
 } // Namespace ns3

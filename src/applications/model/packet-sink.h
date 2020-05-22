@@ -96,21 +96,8 @@ public:
 
   // ACK pacing
 
-  struct Stats {
-    double tputMbps {0};
-    Time avgLat     {0};
-  };
-
-  uint64_t TotalPackets () const;
-  // (Mb/s, avg latency)
-  // Relies on the PacketSink accepting as much data from the Socket as possible
-  //    or else the packets might be split, leading to the appearance duplicate
-  //    of duplicate packets
-  Stats GetStats () const;
   std::list<Ptr<Socket>>& GetSockets ();
-  bool ReceivingBbr () const;
-
-
+  
 protected:
   virtual void DoDispose (void);
 private:
@@ -151,23 +138,6 @@ private:
 
   /// Traced Callback: received packets, source address.
   TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
-
-  // ACK pacing
-
-  struct PacketRecord {
-    Time sndTime   {Seconds (0)};
-    Time recvTime  {Seconds (0)};
-    uint64_t bytes           {0};
-  };
-
-  void AddPacketRecord (Ptr<Packet>& p);
-  void SetMaxPacketRecords (uint32_t m);
-  uint32_t GetMaxPacketRecords () const;
-
-  std::deque<PacketRecord> m_packetRecords;
-  uint32_t m_maxPacketRecords     {0};
-  uint64_t m_totalPackets         {0};
-  bool m_receivingBbr         {false};
 };
 
 } // namespace ns3

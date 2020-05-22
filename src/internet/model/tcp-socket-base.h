@@ -35,7 +35,6 @@
 #include "tcp-tx-buffer.h"
 #include "rtt-estimator.h"
 #include "tcp-l4-protocol.h"
-#include "ns3/packet-sink.h"
 
 #include <torch/script.h>
 
@@ -1304,6 +1303,11 @@ protected:
     Ptr<NetDevice> boundnetdevice;
   };
 
+  struct PacketRecord {
+    Time sndTime   {Seconds (0)};
+    Time recvTime  {Seconds (0)};
+    uint64_t bytes           {0};
+  };
 
   void Unfair (Ptr<Packet> p, SequenceNumber32 seq);
   /**
@@ -1335,15 +1339,22 @@ protected:
   std::tuple<std::vector<std::tuple<double, double>>,
              std::vector<std::tuple<double, double>>> ReadScaleParams (std::string flp);
 
-  std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;      //!< Queue of loss packets - <Time, loss count>
-  std::deque<Time> m_arrivalTimes;                            //!< Queue of timestamp for received packets
+  void AddPacketRecord (Ptr<Packet>& p);
+  void SetMaxPacketRecords (uint32_t m);
+  uint32_t GetMaxPacketRecords () const;
+
+  static std::unordered_set<TcpSocketBase*> sockets;
+  std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;              //!< Queue of loss packets - <Time, loss count>
+  std::deque<PacketRecord> m_packetRecords;
+  std::deque<Time> m_arrivalTimes;                                    //!< Queue of timestamp for received packets
   std::deque<PendingAck> m_pendingAcks;
   std::tuple<std::vector<std::tuple<double, double>>,
              std::vector<std::tuple<double, double>>> m_scaleParams;
   FairShareEstimationType m_fairShareType {FairShareEstimationType::Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
   AckPacingType m_ackPacingType                       {AckPacingType::Calc};  //!< Which method of ACK pacing to use
-  Ptr<PacketSink> m_sink                 {nullptr};  //!< The PacketSink that owns this socket.
   bool m_unfairEnable                      {false};
+  uint32_t m_maxPacketRecords               {1000};
+  uint64_t m_totalPackets                      {0};
   SequenceNumber32 m_highestSeq                {0};  //!< Highest sequence number so far received
   SequenceNumber32 m_lastReceivedSeq           {0};  //!< Sequence number of the last received packet
   Time m_delayStart                  {Seconds (0)};  //!< Delay before ACK pacing is enabled
@@ -1356,12 +1367,25 @@ protected:
 
 public:
 
+  struct Stats {
+    double tputMbps {0};
+    Time avgLat     {0};
+  };
+
+  void SetFairShareType (std::string type);
+  std::string GetFairShareType () const;
+  void SetAckPacingType (std::string type);
+  std::string GetAckPacingType () const;
+  // (Mb/s, avg latency)
+  // Relies on the PacketSink accepting as much data from the Socket as possible
+  //    or else the packets might be split, leading to the appearance duplicate
+  //    of duplicate packets
+  Stats GetStats () const;
+  uint64_t GetTotalPackets () const;
   void SetUnfairEnable (bool enable);
   bool GetUnfairEnable () const;
   void SetDelayStart (Time time);
   Time GetDelayStart () const;
-  void SetSink (Ptr<PacketSink> sink);
-  Ptr<PacketSink> GetSink () const;
   void SetAckPeriod (Time period);
   Time GetAckPeriod () const;
   void SetModel (std::string modelFlp);

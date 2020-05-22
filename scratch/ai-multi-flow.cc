@@ -75,13 +75,7 @@ Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
   ApplicationContainer dstApp = dst.Install (nodes.Get (2));
   dstApp.Start (Seconds (START_TIME));
   dstApp.Stop (Seconds (START_TIME + durS));
-
-
-  Ptr<PacketSink> sink = DynamicCast<PacketSink> (dstApp.Get (0));
-  Ptr<TcpSocketBase> sock = DynamicCast<TcpSocketBase> (
-    sink->GetSockets ().front ());
-  // sock->SetSink (sink);
-  return sink;
+  return DynamicCast<PacketSink> (dstApp.Get (0));
 }
 
 
@@ -90,14 +84,14 @@ void PrintStats ()
   NS_LOG_INFO (Simulator::Now ().GetSeconds () << " s:");
   for (auto& sink : sinks)
     {
-      PacketSink::Stats stats = sink->GetStats ();
-      assert (sink->GetSockets ().size () == 1);
-      NS_LOG_INFO ("  " << (sink->ReceivingBbr () ? "BBR" : "Other") <<
+      NS_ASSERT (sink->GetSockets ().size () == 1);
+      Ptr<TcpSocketBase> sock = DynamicCast<TcpSocketBase> (
+        sink->GetSockets ().front ());
+      TcpSocketBase::Stats stats = sock->GetStats ();
+      NS_LOG_INFO ("  " << (sock->GetReceivingBbr () ? "BBR" : "Other") <<
                    " - avg tput: " << stats.tputMbps <<
                    " Mb/s, avg lat: " << stats.avgLat.GetMicroSeconds () <<
-                   " us, pending ACKs: " <<
-                   DynamicCast<TcpSocketBase> (
-                     sink->GetSockets ().front ())->GetNumPendingAcks ());
+                   " us, pending ACKs: " << sock->GetNumPendingAcks ());
     }
   Simulator::Schedule (Seconds (BBR_PRINT_PERIOD), PrintStats);
 }
@@ -118,6 +112,9 @@ int main (int argc, char *argv[])
   std::string scaleParamsFlp = "";
   uint32_t unfairFlows = 1;
   uint32_t otherFlows = 0;
+  bool enableUnfair = false;
+  std::string fairShareType = "Mathis";
+  std::string ackPacingType = "Calc";
 
   CommandLine cmd;
   cmd.AddValue ("bandwidth_Mbps", "Bandwidth for both links (Mbps).", bwMbps);
@@ -133,6 +130,9 @@ int main (int argc, char *argv[])
   cmd.AddValue ("unfair_flows", "Number of BBR flows.", unfairFlows);
   cmd.AddValue ("other_flows", "Number of non BBR flows.", otherFlows);
   cmd.AddValue ("use_reno", "Use Reno (else Cubic).", useReno);
+  cmd.AddValue ("enable", "Enable unfairness mitigation.", enableUnfair);
+  cmd.AddValue ("fair_share_type", "How to estimate the bandwidth fair share.", fairShareType);
+  cmd.AddValue ("ack_pacing_type", "How to estimate ACK pacing interval.", ackPacingType);
   cmd.Parse (argc, argv);
 
   uint32_t rttUs = delUs * 4;
@@ -168,6 +168,8 @@ int main (int argc, char *argv[])
   std::cout << "Router queue size (packets): "<< queP << "\n";
   std::cout << "Warmup (s): " << warmupS << "\n";
   std::cout << "Duration (s): " << durS << "\n";
+  std::cout << "Fair share estimation type: " << fairShareType << "\n";
+  std::cout << "ACK pacing estimation type: " << ackPacingType << "\n";
   std::cout << "\n";
 
   /////////////////////////////////////////
@@ -188,10 +190,13 @@ int main (int argc, char *argv[])
   // experiment is not application-limited.
   Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1'000'000u));
   Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1'000'000u));
-  Config::SetDefault ("ns3::PacketSink::MaxPacketRecords", UintegerValue (10000));
   // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationEnable",
                       BooleanValue (true));
+  Config::SetDefault ("ns3::TcpSocketBase::FairShareEstimationType",
+                      StringValue (fairShareType));
+  Config::SetDefault ("ns3::TcpSocketBase::AckPacingType",
+                      StringValue (ackPacingType));
   // updateAckPeriod (MicroSeconds(0));
   Config::SetDefault ("ns3::TcpSocketBase::AckPeriod",
                       TimeValue (MicroSeconds (0)));
@@ -200,7 +205,7 @@ int main (int argc, char *argv[])
   // Configure TcpSocketBase with the model filepath.
   Config::SetDefault ("ns3::TcpSocketBase::UnfairMitigationDelayStart",
                       TimeValue (Seconds (warmupS)));
-
+  Config::SetDefault ("ns3::TcpSocketBase::MaxPacketRecords", UintegerValue (10000));
 
   /////////////////////////////////////////
   // Create nodes.
@@ -308,11 +313,12 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Flows:");
   for (auto& sink : sinks)
     {
-      PacketSink::Stats stats = sink->GetStats ();
       double tputMbps = sink->GetTotalRx () * 8 / durS / 1e6;
       sumTputMbps += tputMbps;
       sumTputMbpsSq += pow (tputMbps, 2);
-      NS_LOG_INFO ("  " << (sink->ReceivingBbr () ? "BBR" : "Other") <<
+      Ptr<TcpSocketBase> sock = DynamicCast<TcpSocketBase> (
+        sink->GetSockets ().front ());
+      NS_LOG_INFO ("  " << (sock->GetReceivingBbr () ? "BBR" : "Other") <<
                    " - avg tput: " << tputMbps << " Mb/s");
     }
   NS_LOG_INFO ("Jain's fairness index: " <<
