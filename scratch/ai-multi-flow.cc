@@ -107,6 +107,7 @@ int main (int argc, char *argv[])
   uint32_t recalcUs = 1<<30;
   double warmupS = 5;
   bool pcap = false;
+  bool csv = false;
   std::string modelFlp = "";
   std::string outDir = ".";
   std::string scaleParamsFlp = "";
@@ -124,6 +125,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("recalc_us", "Between recalculating ACK delay (us)", recalcUs);
   cmd.AddValue ("warmup_s", "Time before delaying ACKs (s)", warmupS);
   cmd.AddValue ("pcap", "Record a pcap trace from each port (true or false).", pcap);
+  cmd.AddValue ("csv", "Record a csv file for BBR receiver (true or false).", csv);
   cmd.AddValue ("model", "Path to the model file.", modelFlp);
   cmd.AddValue ("out_dir", "Directory in which to store output files.", outDir);
   cmd.AddValue ("scale_params", "Path to a CSV file containing scaling parameters.", scaleParamsFlp);
@@ -267,9 +269,18 @@ int main (int argc, char *argv[])
   // Setup tracing (as appropriate).
   NS_LOG_INFO ("Configuring tracing.");
   std::stringstream detailsSs;
-  // detailsSs << ackPeriod << "us-" << delayToAckDelay << "s-" << bw << "-"
-  //            << rttUs << "us-" << durS << "s";
+  detailsSs << bw << "-" << 
+               rttUs << "us-" << 
+               queP << "p-" << 
+               durS << "s-" << 
+               (otherFlows + unfairFlows);
   std::string details = detailsSs.str ();
+
+  if (csv) {
+    Config::SetDefault ("ns3::TcpSocketBase::CsvFileName", 
+                      StringValue (outDir + "/" + details + ".csv"));
+  }
+
 
   if (ENABLE_TRACE) {
     NS_LOG_INFO ("Enabling trace files.");
