@@ -25,6 +25,7 @@
 #include <queue>
 #include <iostream>
 #include <fstream>
+
 #include "ns3/traced-value.h"
 #include "ns3/tcp-socket.h"
 #include "ns3/ipv4-header.h"
@@ -33,6 +34,7 @@
 #include "ns3/sequence-number.h"
 #include "ns3/data-rate.h"
 #include "ns3/node.h"
+#include "bbr-tag.h"
 #include "tcp-rx-buffer.h"
 #include "tcp-tx-buffer.h"
 #include "rtt-estimator.h"
@@ -1311,6 +1313,16 @@ protected:
     uint64_t bytes           {0};
   };
 
+  struct MinMax {
+    double min {0};
+    double max {1};
+  };
+
+  struct ScaleParams {
+    std::vector<MinMax> input;
+    std::vector<MinMax> output;
+  };
+
   void Unfair (Ptr<Packet> p, SequenceNumber32 seq);
   /**
    * \brief Estimate the loss packets based on the received sequence number
@@ -1338,20 +1350,20 @@ protected:
                 Ptr<NetDevice> boundnetdevice);
   double Scale (double x, double minIn, double maxIn, double minOut,
                 double maxOut);
-  std::tuple<std::vector<std::tuple<double, double>>,
-             std::vector<std::tuple<double, double>>> ReadScaleParams (std::string flp);
+  ScaleParams ReadScaleParams (std::string flp);
+  std::string FairShareTypeToStr (FairShareEstimationType type) const;
+  FairShareEstimationType StrToFairShareType (std::string str) const;
+  std::string AckPacingTypeToStr (AckPacingType type) const;
+  AckPacingType StrToAckPacingType (std::string str) const;
 
-  void AddPacketRecord (Ptr<Packet>& p);
-  void SetMaxPacketRecords (uint32_t m);
-  uint32_t GetMaxPacketRecords () const;
+  void AddPacketRecord (Ptr<Packet>& p, BbrTag tag);
 
   static std::unordered_set<TcpSocketBase*> sockets;
   std::deque<std::pair<int64_t, uint32_t>> m_lossCounts;              //!< Queue of loss packets - <Time, loss count>
   std::deque<PacketRecord> m_packetRecords;
   std::deque<Time> m_arrivalTimes;                                    //!< Queue of timestamp for received packets
   std::deque<PendingAck> m_pendingAcks;
-  std::tuple<std::vector<std::tuple<double, double>>,
-             std::vector<std::tuple<double, double>>> m_scaleParams;
+  ScaleParams m_scaleParams;
   FairShareEstimationType m_fairShareType {FairShareEstimationType::Mathis};  //!< Which method to use to calculate a flow's bandwidth fair share
   AckPacingType m_ackPacingType                       {AckPacingType::Calc};  //!< Which method of ACK pacing to use
   bool m_unfairEnable                      {false};
@@ -1395,6 +1407,8 @@ public:
   Time GetAckPeriod () const;
   void SetModel (std::string modelFlp);
   std::string GetModel () const;
+  void SetMaxPacketRecords (uint32_t m);
+  uint32_t GetMaxPacketRecords () const;
   size_t GetNumPendingAcks () const;
   bool GetReceivingBbr () const;
   void SetCsvFileName (std::string csvFileName);

@@ -10,7 +10,7 @@ namespace ns3 {
 class BbrTag : public Tag {
  public:
   BbrTag () = default;
-  BbrTag (Time time, bool _isBbr) : sndTime (time), isBbr (_isBbr) {}
+  BbrTag (Time _sndTime, bool _isBbr) : sndTime (_sndTime), isBbr (_isBbr) {}
 
   static TypeId
     GetTypeId (void)
@@ -31,30 +31,32 @@ class BbrTag : public Tag {
   uint32_t
     GetSerializedSize (void) const
   {
-    return sizeof (Time);
+    return sizeof (uint64_t) + sizeof (uint8_t);
   }
 
   void
     Serialize (TagBuffer i) const
   {
-    i.WriteU64 (*(uint64_t*)&sndTime);
+    i.WriteU64 (*((uint64_t*) &sndTime));
+    i.WriteU8 ((uint8_t) isBbr);
   }
 
   void
     Deserialize (TagBuffer i)
   {
-    auto tmp = i.ReadU64 ();
-    sndTime = *(Time*)&tmp;
+    uint64_t tmp = i.ReadU64 ();
+    sndTime = *((Time*)& tmp);
+    isBbr = (bool) i.ReadU8 ();
   }
 
   void
     Print (std::ostream &os) const
   {
-    os << "v=" << sndTime;
+    os << "sndTime=" << sndTime << ",isBbr=" << isBbr;
   }
 
-  Time sndTime;
-  bool isBbr;
+  Time sndTime {Seconds (0)};
+  bool isBbr         {false};
 };
 
 } // namespace ns3
