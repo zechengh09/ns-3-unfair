@@ -30,16 +30,17 @@
 using namespace ns3;
 
 // Constants.
-#define ENABLE_TRACE     false  // Set to "true" to enable trace
-#define START_TIME       0.0    // Seconds
-#define S_PORT           911    // Well-known port for server
-#define PACKET_SIZE      1380   // Bytes; Assumes 60 bytes for the IP header
-                                // (20 bytes + up to 40 bytes for options)
-                                // and a maximum of 60 bytes for the TCP
-                                // header (20 bytes + up to 40 bytes for
-                                // options).
-#define MTU              1500   // Bytes
-#define PCAP_LEN         200    // Bytes
+#define ENABLE_TRACE       false  // Set to "true" to enable trace
+#define START_TIME         0.0    // Seconds
+#define S_PORT             911    // Well-known port for server
+#define PACKET_SIZE        1380   // Bytes; Assumes 60 bytes for the IP header
+                                  // (20 bytes + up to 40 bytes for options)
+                                  // and a maximum of 60 bytes for the TCP
+                                  // header (20 bytes + up to 40 bytes for
+                                  // options).
+#define MTU                1500   // Bytes
+#define HEADER_AND_OPTION  120    // Bytes
+#define PCAP_LEN           200    // Bytes
 
 #define TCP_PROTOCOL     "ns3::TcpBbr"
 // #define TCP_PROTOCOL     "ns3::TcpNewReno"
@@ -102,6 +103,7 @@ int main (int argc, char *argv[])
   double delUs = 5000;
   uint32_t queP = 1000;
   uint32_t packet_size = PACKET_SIZE;
+  uint32_t mtu = MTU;
   double durS = 20;
   uint32_t recalcUs = 1<<30;
   double warmupS = 5;
@@ -152,6 +154,8 @@ int main (int argc, char *argv[])
   std::stringstream sndSS;
   sndSS << routerToDeviceBW << "Mbps";
   std::string routerToDeviceBWStr = sndSS.str ();
+
+  mtu = packet_size + HEADER_AND_OPTION;
 
   /////////////////////////////////////////
   // Turn on logging and report parameters.
@@ -228,13 +232,13 @@ int main (int argc, char *argv[])
   PointToPointHelper p2p (PCAP_LEN);
   p2p.SetDeviceAttribute ("DataRate", StringValue ("10Gbps"));
   p2p.SetChannelAttribute ("Delay", StringValue (del));
-  p2p.SetDeviceAttribute ("Mtu", UintegerValue (MTU));
+  p2p.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
   NetDeviceContainer devices1 = p2p.Install (n0Ton1);
 
   // Router to Client.
   p2p.SetDeviceAttribute ("DataRate", StringValue (routerToDeviceBWStr));
   p2p.SetChannelAttribute ("Delay", StringValue (del));
-  p2p.SetDeviceAttribute ("Mtu", UintegerValue (MTU));
+  p2p.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
   p2p.SetQueue ("ns3::DropTailQueue", "MaxSize", QueueSizeValue (que));
   NetDeviceContainer devices2 = p2p.Install (n1Ton2);
 
