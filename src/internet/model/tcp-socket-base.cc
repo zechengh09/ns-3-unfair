@@ -4734,6 +4734,12 @@ void
 TcpSocketBase::SetModel (std::string modelFlp)
 {
   NS_LOG_FUNCTION (this << modelFlp);
+
+  // No need to parse model file if no file path is given
+  if (modelFlp.empty ()) {
+    return;
+  }
+
   // Assume that the filename (without the extension) is the name of the model.
   size_t lastSlash = modelFlp.find_last_of ("/");
   size_t lastDot = modelFlp.find_last_of (".");
