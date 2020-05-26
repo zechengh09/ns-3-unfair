@@ -12,8 +12,6 @@
 
 // System includes.
 #include <chrono>
-#include <fstream>
-#include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -157,20 +155,19 @@ int main (int argc, char *argv[])
   //       and "BbrState".
   LogComponentEnable ("main", LOG_LEVEL_INFO);
 
-  std::cout << "\n";
-  std::cout << "TCP protocol: " << TCP_PROTOCOL << "\n";
-  std::cout << "Server to Router Bandwidth (Mbps): " << bwMbps << "\n";
-  std::cout << "Server to Router Delay (us): " << delUs << "\n";
-  std::cout << "Router to Client Bandwidth (Mbps): " << bwMbps << "\n";
-  std::cout << "Router to Client Delay (us): " << delUs << "\n";
-  std::cout << "RTT (us): " << rttUs << "\n";
-  std::cout << "Packet size (bytes): " << PACKET_SIZE << "\n";
-  std::cout << "Router queue size (packets): "<< queP << "\n";
-  std::cout << "Warmup (s): " << warmupS << "\n";
-  std::cout << "Duration (s): " << durS << "\n";
-  std::cout << "Fair share estimation type: " << fairShareType << "\n";
-  std::cout << "ACK pacing estimation type: " << ackPacingType << "\n";
-  std::cout << "\n";
+  NS_LOG_INFO ("\n" <<
+               "TCP protocol: " << TCP_PROTOCOL << "\n" <<
+               "Server to Router Bandwidth (Mbps): " << bwMbps << "\n" <<
+               "Server to Router Delay (us): " << delUs << "\n" <<
+               "Router to Client Bandwidth (Mbps): " << bwMbps << "\n" <<
+               "Router to Client Delay (us): " << delUs << "\n" <<
+               "RTT (us): " << rttUs << "\n" <<
+               "Packet size (bytes): " << PACKET_SIZE << "\n" <<
+               "Router queue size (packets): "<< queP << "\n" <<
+               "Warmup (s): " << warmupS << "\n" <<
+               "Duration (s): " << durS << "\n" <<
+               "Fair share estimation type: " << fairShareType << "\n" <<
+               "ACK pacing estimation type: " << ackPacingType << "\n");
 
   /////////////////////////////////////////
   // Configure parameters.

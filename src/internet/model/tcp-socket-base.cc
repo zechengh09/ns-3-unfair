@@ -61,8 +61,6 @@
 #include "tcp-option-sack.h"
 #include "tcp-congestion-ops.h"
 
-#include "bbr-tag.h"
-
 namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("TcpSocketBase");
 
@@ -2794,6 +2792,8 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
   uint8_t flags = withAck ? TcpHeader::ACK : 0;
   uint32_t remainingData = m_txBuffer->SizeFromSequence (seq + SequenceNumber32 (sz));
 
+  NS_LOG_DEBUG ("CC: " << m_congestionControl->GetName());
+  NS_LOG_DEBUG ("m_sendingBbr: " << std::string (m_sendingBbr ? "Yes" : "No"));
   BbrTag tag (Simulator::Now (), m_sendingBbr);
   p->AddByteTag(tag);
 
@@ -3158,8 +3158,7 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   NS_LOG_DEBUG ("Data segment, seq=" << tcpHeader.GetSequenceNumber () <<
                 " pkt size=" << p->GetSize () );
 
-  AddPacketRecord (p);
-  Unfair(p, tcpHeader.GetSequenceNumber ());
+  Unfair (p, tcpHeader.GetSequenceNumber ());
 
   // Put into Rx buffer
   SequenceNumber32 expectedSeq = m_rxBuffer->NextRxSequence ();
@@ -4104,18 +4103,46 @@ RttHistory::RttHistory (const RttHistory& h)
 void
 TcpSocketBase::Unfair (Ptr<Packet> p, SequenceNumber32 seq) {
   NS_LOG_FUNCTION (this << p << seq);
+  BbrTag tag;
+  NS_ASSERT (p->FindFirstMatchingByteTag (tag));
+  NS_ASSERT ((Simulator::Now () - tag.sndTime).GetSeconds () > 0);
+  m_receivingBbr = tag.isBbr;
+  AddPacketRecord (p, tag);
+
+  // Debug logging.
+  NS_LOG_DEBUG ("one-way delay: " << Simulator::Now () - tag.sndTime);
+  NS_LOG_DEBUG ("tag.sndTime: " << tag.sndTime);
+  NS_LOG_DEBUG ("tag.isBbr: " << tag.isBbr);
+  NS_LOG_DEBUG ("m_receivingBbr: " << std::string (m_receivingBbr ? "Yes" : "No"));
+  std::string fairShareTypeStr = FairShareTypeToStr (m_fairShareType);
+  NS_LOG_DEBUG ("m_fairShareType" << fairShareTypeStr);
+  std::string ackPacingTypeStr = AckPacingTypeToStr (m_ackPacingType);
+  NS_LOG_DEBUG ("m_ackPacingType: " << ackPacingTypeStr);
+  NS_LOG_DEBUG ("m_unfairEnable: " << m_unfairEnable);
+  NS_LOG_DEBUG ("m_modelName: " << m_modelName);
+  std::stringstream ss;
+  ss << "m_scaleParams:\n  input:";
+  for (MinMax mm : m_scaleParams.input)
+    {
+      ss << "\n    (" << mm.min << ", " << mm.max << ")";
+    }
+  ss << "\n  output:";
+  for (MinMax mm : m_scaleParams.output)
+    {
+      ss << "\n    (" << mm.min << ", " << mm.max << ")";
+    }
+  NS_LOG_DEBUG (ss.str ());
+
   // If this is not a BBR flow, then abort.
   if (! m_receivingBbr)
     {
+      NS_LOG_DEBUG (
+          "This flow is not using BBR. Aborting unfairness mitigation.");
       return;
     }
 
   // Store the timestamp of receiving this packet
   m_arrivalTimes.push_back (Simulator::Now ());
-
-  BbrTag tag;
-  NS_ASSERT (p->FindFirstMatchingByteTag (tag));
-  m_receivingBbr = tag.isBbr;
 
   // TODO: Use different RTT estimate here.
   Time rtt = m_rtt->GetEstimate ();
@@ -4134,12 +4161,15 @@ TcpSocketBase::Unfair (Ptr<Packet> p, SequenceNumber32 seq) {
   // internal bookkeeping done as part of that process still takes place.
   if (! m_unfairEnable || Simulator::Now () < m_delayStart)
     {
+      NS_LOG_DEBUG ("Unfairness mitigation is currently disabled. Aborting.");
       return;
     }
 
   // If we could not determine the fair throughput, then disable ACK pacing.
   if (fairTput == -1)
     {
+      NS_LOG_DEBUG (
+          "Unable to determine fair throughput. Disabling ACK pacing.");
       m_ackPeriod = Seconds (0);
       return;
     }
@@ -4150,6 +4180,7 @@ TcpSocketBase::Unfair (Ptr<Packet> p, SequenceNumber32 seq) {
   // Do we want to do this?
   if (actualTput < (1.2 * fairTput))
     {
+      NS_LOG_DEBUG ("Flow is fair. Disabling ACK pacing.");
       m_ackPeriod = Seconds (0);
       return;
     }
@@ -4163,9 +4194,12 @@ TcpSocketBase::Unfair (Ptr<Packet> p, SequenceNumber32 seq) {
       m_ackPeriod = EstimateAckPeriodModel (fairTput);
       break;
     default:
+      // TODO: NS_LOG_ERROR() does not end the program. Use a different means
+      //       for ending the program.
       NS_LOG_ERROR ("Unknown fair share estimation type!");
     }
 
+  NS_LOG_DEBUG ("m_ackPeriod: " << m_ackPeriod);
   NS_LOG_INFO ("tput (Mb/s): " << actualTput <<
                ", RTT (s): " << stats.avgLat.GetSeconds () * 2 <<
                ", newPeriod (s): " << m_ackPeriod.GetSeconds () <<
@@ -4280,6 +4314,7 @@ TcpSocketBase::EstimateFairShareCalc (Ptr<Packet> p, SequenceNumber32 seq,
         {
           fairTput = c / (rttS * sqrt (loss_rate)); // In number of packets per second
         }
+      break;
     case FairShareEstimationType::Padhye:
       // TODO: Implement Padhye equation.
       NS_LOG_ERROR ("Estimation type Padhye not yet implemented!");
@@ -4330,15 +4365,14 @@ TcpSocketBase::EstimateAckPeriodModel (double targetTputMbps)
   //auto output = periodTensor.item().to<double>();
 
   // TODO: This scaling assumes a single input and output feature.
+  // TODO: There is a bug here.
   double out = m_net->forward (std::vector<torch::jit::IValue> ({
         Scale (targetTputMbps * 1e6,
-               std::get<0> (std::get<0> (m_scaleParams)[0]),
-               std::get<1> (std::get<0> (m_scaleParams)[0]), 0, 1)}))
+               m_scaleParams.input[0].min, m_scaleParams.input[0].max, 0, 1)}))
     .toTensor ().item ().to<double> ();
-  double out_unscaled = Scale (out, 0, 1,
-                               std::get<0> (std::get<1> (m_scaleParams)[0]),
-                               std::get<1> (std::get<1> (m_scaleParams)[0]));
-  NS_LOG_INFO ("Raw output: " << out << ", unscaled: " << out_unscaled);
+  double out_unscaled = Scale (out, 0, 1, m_scaleParams.output[0].min,
+                               m_scaleParams.output[0].max);
+  NS_LOG_DEBUG ("raw model output: " << out << ", unscaled: " << out_unscaled);
   return MicroSeconds (1. / out_unscaled);
 }
 
@@ -4422,8 +4456,7 @@ TcpSocketBase::Scale (double x, double min_in, double max_in, double min_out,
   return min_out + (x - min_in) * (max_out - min_out) / (max_in - min_in);
 }
 
-std::tuple<std::vector<std::tuple<double, double>>,
-           std::vector<std::tuple<double, double>>>
+TcpSocketBase::ScaleParams
 TcpSocketBase::ReadScaleParams (std::string flp)
 {
   NS_LOG_FUNCTION (this << flp);
@@ -4437,82 +4470,138 @@ TcpSocketBase::ReadScaleParams (std::string flp)
   NS_ASSERT (std::regex_search(str, match, re));
   NS_ASSERT (match.size () == 5);
   return {
-    {{stod(match[1]), stod(match[2])}},
-      {{stod(match[3]), stod(match[4])}}
+    {{stod (match[1]), stod (match[2])}},
+      {{stod (match[3]), stod (match[4])}}
   };
+}
+
+std::string TcpSocketBase::FairShareTypeToStr (
+    TcpSocketBase::FairShareEstimationType type) const
+{
+  NS_LOG_FUNCTION (this);
+  std::string str;
+  switch (type)
+    {
+    case FairShareEstimationType::Mathis:
+      str = "Mathis";
+      break;
+    case FairShareEstimationType::Padhye:
+      str = "Padhye";
+      break;
+    case FairShareEstimationType::Average:
+      str = "Average";
+      break;
+    case FairShareEstimationType::Model:
+      str = "Model";
+      break;
+    default:
+      NS_LOG_ERROR ("Invalid fair share estimation type!");
+    }
+  return str;
+}
+
+TcpSocketBase::FairShareEstimationType TcpSocketBase::StrToFairShareType (
+    std::string str) const
+{
+  NS_LOG_FUNCTION (this << str);
+  FairShareEstimationType type;
+  if (str == "Mathis")
+    {
+      type = FairShareEstimationType::Mathis;
+    }
+  else if (str == "Padhye")
+    {
+      type = FairShareEstimationType::Padhye;
+    }
+  else if (str == "Average")
+    {
+      type = FairShareEstimationType::Average;
+    }
+  else if (str == "Model")
+    {
+      type = FairShareEstimationType::Model;
+    }
+  else
+    {
+      NS_LOG_ERROR ("Invalid fair share estimation type: " << str);
+    }
+  return type;
+}
+
+std::string TcpSocketBase::AckPacingTypeToStr (
+    TcpSocketBase::AckPacingType type) const
+{
+  NS_LOG_FUNCTION (this);
+  std::string str;
+  switch (type)
+    {
+    case AckPacingType::Calc:
+      str = "Calc";
+      break;
+    case AckPacingType::Model:
+      str = "Model";
+      break;
+    default:
+      NS_LOG_ERROR ("Invalid ACK pacing type!");
+    }
+  return str;
+}
+
+TcpSocketBase::AckPacingType TcpSocketBase::StrToAckPacingType (
+    std::string str) const
+{
+  NS_LOG_FUNCTION (this << str);
+  AckPacingType type;
+  if (str == "Calc")
+    {
+      type = AckPacingType::Calc;
+    }
+  else if (str == "Model")
+    {
+      type = AckPacingType::Model;
+    }
+  else
+    {
+      NS_LOG_ERROR ("Invalid ACK pacing type: " << str);
+    }
+  return type;
+}
+
+void TcpSocketBase::AddPacketRecord (Ptr<Packet>& p, BbrTag tag)
+{
+  NS_LOG_FUNCTION (this << p);
+  ++m_totalPackets;
+  m_packetRecords.push_back({
+      tag.sndTime, Simulator::Now (), p->GetSize ()});
+
+  // If adding this record caused the list of records to exceed the threshold,
+  // then remove the oldest record.
+  if (m_packetRecords.size () > m_maxPacketRecords)
+    {
+      m_packetRecords.pop_front ();
+      NS_ASSERT (m_packetRecords.size () == m_maxPacketRecords);
+    }
 }
 
 void
 TcpSocketBase::SetFairShareType (std::string type)
 {
   NS_LOG_FUNCTION (this << type);
-  FairShareEstimationType newType = m_fairShareType;
-  if (type == "Mathis")
-    {
-      newType = FairShareEstimationType::Mathis;
-    }
-  else if (type == "Padhye")
-    {
-      newType = FairShareEstimationType::Padhye;
-    }
-  else if (type == "Average")
-    {
-      newType = FairShareEstimationType::Average;
-    }
-  else if (type == "Model")
-    {
-      newType = FairShareEstimationType::Model;
-    }
-  else
-    {
-      NS_LOG_ERROR ("Invalid ACK pacing type: " << type);
-    }
-  m_fairShareType = newType;
+  m_fairShareType = StrToFairShareType (type);
 }
 
 std::string
 TcpSocketBase::GetFairShareType () const
 {
   NS_LOG_FUNCTION (this);
-  std::string type;
-  switch (m_fairShareType)
-    {
-    case FairShareEstimationType::Mathis:
-      type = "Mathis";
-      break;
-    case FairShareEstimationType::Padhye:
-      type = "Padhye";
-      break;
-    case FairShareEstimationType::Average:
-      type = "Average";
-      break;
-    case FairShareEstimationType::Model:
-      type = "Model";
-      break;
-    default:
-      NS_LOG_ERROR ("Invalid fair share estimation type!");
-    }
-  return type;
+  return FairShareTypeToStr (m_fairShareType);
 }
 
 void
 TcpSocketBase::SetAckPacingType (std::string type)
 {
   NS_LOG_FUNCTION (this << type);
-  AckPacingType newType = m_ackPacingType;
-  if (type == "Calc")
-    {
-      newType = AckPacingType::Calc;
-    }
-  else if (type == "Model")
-    {
-      newType = AckPacingType::Model;
-    }
-  else
-    {
-      NS_LOG_ERROR ("Invalid ACK pacing type: " << type);
-    }
-  m_ackPacingType = newType;
+  m_ackPacingType = StrToAckPacingType (type);
 }
 
 std::string
@@ -4538,7 +4627,7 @@ TcpSocketBase::Stats
 TcpSocketBase::GetStats () const
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("m_packetRecords.size(): " << m_packetRecords.size ());
+  NS_LOG_DEBUG ("m_packetRecords.size(): " << m_packetRecords.size ());
   if (m_packetRecords.empty ())
     {
       return Stats ();
@@ -4553,7 +4642,8 @@ TcpSocketBase::GetStats () const
     }
 
   double avgTputMbps = bytes * 8 / 1e6 /
-    (m_packetRecords.back ().recvTime - m_packetRecords.front ().sndTime).GetSeconds ();
+    (m_packetRecords.back ().recvTime - m_packetRecords.front ().sndTime)
+    .GetSeconds ();
   Time avgLat = lat / m_packetRecords.size ();
   return TcpSocketBase::Stats ({avgTputMbps, avgLat});
 }
@@ -4614,7 +4704,7 @@ TcpSocketBase::SetModel (std::string modelFlp)
   // Assume that the filename (without the extension) is the name of the model.
   size_t lastSlash = modelFlp.find_last_of ("/");
   size_t lastDot = modelFlp.find_last_of (".");
-  m_modelName = modelFlp.substr (lastSlash, lastDot - lastSlash);
+  m_modelName = modelFlp.substr (lastSlash + 1, lastDot - lastSlash - 1);
   // Assume that the scale params file has the same name with a the "csv"
   // extension.
   std::stringstream ss;
@@ -4635,41 +4725,8 @@ TcpSocketBase::SetModel (std::string modelFlp)
 std::string
 TcpSocketBase::GetModel () const
 {
-    NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this);
   return m_modelName;
-}
-
-size_t
-TcpSocketBase::GetNumPendingAcks () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_pendingAcks.size ();
-}
-
-bool TcpSocketBase::GetReceivingBbr () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_receivingBbr;
-}
-
-void TcpSocketBase::AddPacketRecord (Ptr<Packet>& p)
-{
-  NS_LOG_FUNCTION (this << p);
-  BbrTag tag;
-  NS_ASSERT (p->FindFirstMatchingByteTag (tag));
-  m_receivingBbr = tag.isBbr;
-
-  ++m_totalPackets;
-  m_packetRecords.push_back({
-      tag.sndTime, Simulator::Now (), p->GetSize ()});
-
-  // If adding this record caused the list of records to exceed the threshold,
-  // then remove the oldest record.
-  if (m_packetRecords.size () > m_maxPacketRecords)
-    {
-      m_packetRecords.pop_front ();
-      NS_ASSERT (m_packetRecords.size () == m_maxPacketRecords);
-    }
 }
 
 void
@@ -4684,6 +4741,19 @@ TcpSocketBase::GetMaxPacketRecords () const
 {
   NS_LOG_FUNCTION (this);
   return m_maxPacketRecords;
+}
+
+size_t
+TcpSocketBase::GetNumPendingAcks () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_pendingAcks.size ();
+}
+
+bool TcpSocketBase::GetReceivingBbr () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_receivingBbr;
 }
 
 } // namespace ns3
