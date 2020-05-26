@@ -179,10 +179,10 @@ TcpSocketBase::GetTypeId (void)
                    MakeUintegerAccessor (&TcpSocketBase::SetMaxPacketRecords,
                                          &TcpSocketBase::GetMaxPacketRecords),
                    MakeUintegerChecker<uint64_t> ())
-    .AddAttribute ("CsvFileName", "Filename of the csv log file", StringValue(""),
+    .AddAttribute ("CsvFileName", "Filename of the csv log file", StringValue (""),
                   MakeStringAccessor (&TcpSocketBase::SetCsvFileName,
                                       &TcpSocketBase::GetCsvFileName),
-                  MakeStringChecker())
+                  MakeStringChecker ())
     .AddTraceSource ("RTO",
                      "Retransmission timeout",
                      MakeTraceSourceAccessor (&TcpSocketBase::m_rto),
@@ -539,8 +539,8 @@ TcpSocketBase::~TcpSocketBase (void)
   m_tcp = 0;
 
   // Close csv file
-  if (m_csvFile.is_open()) {
-    m_csvFile.close();
+  if (m_csvFile.is_open ()) {
+    m_csvFile.close ();
   }
 
   CancelAllTimers ();
@@ -4157,17 +4157,16 @@ TcpSocketBase::Unfair (Ptr<Packet> p, SequenceNumber32 seq) {
   // Store the timestamp of receiving this packet
   m_arrivalTimes.push_back (Simulator::Now ());
 
-
-  BbrTag tag;
-  NS_ASSERT (p->FindFirstMatchingByteTag (tag));
-  m_receivingBbr = tag.isBbr;
-
   // Initialize csv File
-  if ((!m_csvFile.is_open()) && (!m_csvFileName.empty())) {
-    m_csvFile.open(m_csvFileName);
-    m_csvFile << "Seq" << ","        // Sequence number
-              << "Received" << ","   // Receive time
-              << "Sent" << "\n";     // Sent time
+  if (!m_csvFile.is_open () && !m_csvFileName.empty ()) {
+    m_csvFile.open (m_csvFileName);
+
+    // The first row of m_csvFile will be treated as column Id 
+    // when the file is read into numpy array
+
+    m_csvFile << "Seq" << ","               // Sequence number
+              << "Sent_ms" << ","           // Sent time in milliseconds
+              << "Received_ms" << "\n";     // Received time milliseconds
   }
 
 
@@ -4184,10 +4183,10 @@ TcpSocketBase::Unfair (Ptr<Packet> p, SequenceNumber32 seq) {
     }
 
   // Write to csv file
-  if (m_csvFile.is_open()) {
-    m_csvFile << seq << ","                                   // Sequence number
-              << Simulator::Now().GetMilliSeconds() << ","    // Receive time
-              << tag.sndTime.GetMilliSeconds() << "\n";       // Sent time
+  if (m_csvFile.is_open ()) {
+    m_csvFile << seq << ","                                    // Sequence number
+              << tag.sndTime.GetMilliSeconds() << ","          // Sent time
+              << Simulator::Now().GetMilliSeconds() << "\n";   // Received time
   }
 
   // If unfariness mitigation is disabled or the warmup time has not passed,
@@ -4766,30 +4765,15 @@ TcpSocketBase::GetModel () const
 void
 TcpSocketBase::SetCsvFileName (std::string csvFileName) 
 {
-  std::cout << "Set Csv FileName " << csvFileName << std::endl;
   NS_LOG_FUNCTION (this << csvFileName);
   m_csvFileName = csvFileName;
 }
 
 std::string
-TcpSocketBase::GetCsvFileName() const
+TcpSocketBase::GetCsvFileName () const
 {
   NS_LOG_FUNCTION (this);
   return m_csvFileName;
-}
-
-size_t
-TcpSocketBase::GetNumPendingAcks () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_pendingAcks.size ();
-}
-
-bool TcpSocketBase::GetReceivingBbr () const
-{
-
-  NS_LOG_FUNCTION (this);
-  return m_modelName;
 }
 
 void

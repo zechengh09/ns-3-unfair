@@ -33,8 +33,10 @@ ACK_PERIOD_MAX_us = 6_000  # 1 RTT ≈ 4_000
 ACK_PERIOD_DELTA_us = 50
 ACK_PERIODS_us = list(range(
     ACK_PERIOD_MIN_us, ACK_PERIOD_MAX_us + 1, ACK_PERIOD_DELTA_us))
-# Router queue size (packets).
-QUEUE_p = list(range(50, 1000, 50)) # 1 to 20 BDP
+# Packet size (bytes)
+PACKET_SIZE = 1380
+# Router queue size (BDP).
+QUEUE_p = list(range(1, 21)) # 1 to 20 BDP
 # Number of other flows
 OTHER_FLOWS = list(range(4, 9)) # 4 to 8 non BBR flows
 # Simulation duration (s).
@@ -143,11 +145,15 @@ def main():
         f"/usr/lib/gcc/x86_64-linux-gnu/7:{path.join(NS3_DIR, 'build')}")
 
     # Assemble the configurations.
-    cnfs = [{"bandwidth_Mbps": bw_Mbps, "delay_us": dly_us,
-             "queue_capacity_p": queue_p, "experiment_duration_s": DUR_s,
+    cnfs = [{"bandwidth_Mbps": bw_Mbps, 
+             "delay_us": dly_us,
+             "queue_capacity_p": queue_p * int((bw_Mbps / 8.0) * (dly_us * 4) / float(PACKET_SIZE)), 
+             "experiment_duration_s": DUR_s,
              "other_flows": other_flows,
              "pcap": "true" if PCAP else "false",
-             "csv": "true" if CSV else "false", "out_dir": sim_dir}
+             "csv": "true" if CSV else "false", 
+             "packet_size": PACKET_SIZE,
+             "out_dir": sim_dir}
             for bw_Mbps in BWS_Mbps
             for dly_us in DELAYS_us
             for queue_p in QUEUE_p
