@@ -55,14 +55,14 @@ extern bool useReno;
 
 
 Ptr<PacketSink> CreateFlow(uint16_t port, Ipv4InterfaceContainer i1i2,
-                           NodeContainer nodes, double durS, uint32_t recalcUs)
+                           NodeContainer nodes, double durS, uint32_t packet_size)
 {
   // Source (at node 0).
   BulkSendHelper src ("ns3::TcpSocketFactory",
                       InetSocketAddress (i1i2.GetAddress (1), port));
   // Set the amount of data to send in bytes (0 for unlimited).
   src.SetAttribute ("MaxBytes", UintegerValue (0));
-  src.SetAttribute ("SendSize", UintegerValue (PACKET_SIZE));
+  src.SetAttribute ("SendSize", UintegerValue (packet_size));
   ApplicationContainer srcApp = src.Install (nodes.Get (0));
   srcApp.Start (Seconds (START_TIME));
   srcApp.Stop (Seconds (START_TIME + durS));
@@ -101,6 +101,7 @@ int main (int argc, char *argv[])
   double bwMbps = 10;
   double delUs = 5000;
   uint32_t queP = 1000;
+  uint32_t packet_size = PACKET_SIZE;
   double durS = 20;
   uint32_t recalcUs = 1<<30;
   double warmupS = 5;
@@ -119,6 +120,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("bandwidth_Mbps", "Bandwidth for both links (Mbps).", bwMbps);
   cmd.AddValue ("delay_us", "Link delay (us). RTT is 4x this value.", delUs);
   cmd.AddValue ("queue_capacity_p", "Router queue size (packets).", queP);
+  cmd.AddValue ("packet_size", "Size of a single packet (bytes)", packet_size);
   cmd.AddValue ("experiment_duration_s", "Simulation duration (s).", durS);
   cmd.AddValue ("recalc_us", "Between recalculating ACK delay (us)", recalcUs);
   cmd.AddValue ("warmup_s", "Time before delaying ACKs (s)", warmupS);
@@ -164,7 +166,7 @@ int main (int argc, char *argv[])
                "Router to Client Bandwidth (Mbps): " << bwMbps << "\n" <<
                "Router to Client Delay (us): " << delUs << "\n" <<
                "RTT (us): " << rttUs << "\n" <<
-               "Packet size (bytes): " << PACKET_SIZE << "\n" <<
+               "Packet size (bytes): " << packet_size << "\n" <<
                "Router queue size (packets): "<< queP << "\n" <<
                "Warmup (s): " << warmupS << "\n" <<
                "Duration (s): " << durS << "\n" <<
@@ -181,7 +183,7 @@ int main (int argc, char *argv[])
                       StringValue (TCP_PROTOCOL));
   // Set the segment size (otherwise, ns-3's default is 536).
   Config::SetDefault ("ns3::TcpSocket::SegmentSize",
-                      UintegerValue (PACKET_SIZE));
+                      UintegerValue (packet_size));
   // Turn off delayed ACKs (so that every packet results in an ACK).
   // Note: BBR still works without this.
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (0));
@@ -259,7 +261,7 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Creating flows.");
   uint32_t port = 101;
   for (uint32_t i = 0; i < unfairFlows + otherFlows; ++i) {
-    sinks.push_back (CreateFlow (port + i, i1i2, nodes, durS, recalcUs));
+    sinks.push_back (CreateFlow (port + i, i1i2, nodes, durS, packet_size));
   }
 
   /////////////////////////////////////////
@@ -270,6 +272,7 @@ int main (int argc, char *argv[])
                rttUs << "us-" << 
                queP << "p-" << 
                durS << "s-" << 
+               packet_size << "B-" <<
                (otherFlows + unfairFlows);
   std::string details = detailsSs.str ();
 
